@@ -25,12 +25,10 @@ exports.serial = function (operations, callback) {
 function serialRecursive(operations, callback, error, data) {
     if (error || operations.length === 0) {
         callback(error);
+    } else if (data) {
+        operations.shift()(data, serialRecursive.bind(null, operations, callback));
     } else {
-        if (data) {
-            operations.shift()(data, serialRecursive.bind(null, operations, callback));
-        } else {
-            operations.shift()(serialRecursive.bind(null, operations, callback));
-        }
+        operations.shift()(serialRecursive.bind(null, operations, callback));
     }
 }
 
