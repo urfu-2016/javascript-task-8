@@ -51,6 +51,7 @@ exports.serial = function (operations, callback) {
 
             return;
         }
+
         currentIndex++;
         if (currentIndex === operations.length) {
             callback(error, result);
@@ -106,7 +107,15 @@ exports.makeAsync = function (func) {
         setTimeout(function (args) {
             var callback = args[args.length - 1];
             args = Array.prototype.slice.call(args, 0, -1);
-            var result = func.apply(null, args);
+            var result;
+
+            try {
+                result = func.apply(null, args);
+            } catch (error) {
+                callback(error);
+
+                return;
+            }
 
             callback(null, result);
         }, 0, arguments);
@@ -131,7 +140,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
     var results = [];
     var errorHappened = false;
     var workersStarted = 0;
-    var localCallback = function (currentIndex) {
+    var localCallback = function (index) {
         return function (error, result) {
             if (error || errorHappened) {
                 if (!errorHappened) {
@@ -142,7 +151,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
                 return;
             }
 
-            results[currentIndex] = result;
+            results[index] = result;
             finished++;
             activeWorkersCount--;
             if (finished === items.length) {
