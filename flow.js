@@ -1,6 +1,6 @@
 'use strict';
 
-exports.isStar = false;
+exports.isStar = true;
 
 /**
  * Последовательное выполнение операций
@@ -24,9 +24,13 @@ exports.serial = function (operations, callback) {
  */
 function serialRecursive(operations, callback, error, data) {
     if (error || operations.length === 0) {
-        callback(error, data);
+        callback(error);
     } else {
-        operations.shift()(data, serialRecursive.bind(null, operations, callback));
+        if (data) {
+            operations.shift()(data, serialRecursive.bind(null, operations, callback));
+        } else {
+            operations.shift()(serialRecursive.bind(null, operations, callback));
+        }
     }
 }
 
@@ -134,6 +138,9 @@ function makeTaskExecutor(taskLimit, callback, tasks) {
  * @param {Function} callback – общий callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
+    if (items.length === 0) {
+        callback(null, []);
+    }
     var executor = makeTaskExecutor(limit, callback, items.map(function (item) {
         return operation.bind(null, item);
     }));
