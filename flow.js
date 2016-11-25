@@ -8,11 +8,7 @@ exports.isStar = true;
  * @param {Function} callback – общий callback
  */
 exports.serial = function (operations, callback) {
-    if (!operations || operations.length === 0) {
-        callback(null, null);
-    } else {
-        operations[0](serialRecursive.bind(null, operations.slice(1), callback));
-    }
+    operations[0](serialRecursive.bind(null, operations.slice(1), callback));
 };
 
 /**
