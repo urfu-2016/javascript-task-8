@@ -12,7 +12,17 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    console.info(operations, callback);
+    var currentIndex = 0;
+
+    function internalCallback(error, data) {
+        if (currentIndex >= operations.length || error) {
+            callback(error, data);
+        } else {
+            operations[currentIndex++](data, internalCallback);
+        }
+    }
+
+    operations[currentIndex++](internalCallback);
 };
 
 /**
@@ -22,7 +32,7 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    exports.mapLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -32,15 +42,29 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    exports.filterLimit(items, Infinity, operation, callback);
 };
 
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
  */
 exports.makeAsync = function (func) {
-    console.info(func);
+    return function () {
+        setTimeout(function (args) {
+            var callback = args.pop();
+            var result;
+            var error;
+            try {
+                result = func.apply(null, args);
+            } catch (e) {
+                error = e;
+            }
+
+            callback(error, result);
+        }, 0, [].slice.call(arguments));
+    };
 };
 
 /**
@@ -52,7 +76,39 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция mapLimit не реализована'));
+    items = items.slice();
+    var activeWorkersCount = 0;
+
+    var result = [];
+    var isExceptionRaised = false;
+
+    function getInternalCallback(index) {
+        return function internalCallback(error, data) {
+            if (error || isExceptionRaised) {
+                if (!isExceptionRaised) {
+                    isExceptionRaised = true;
+                    callback(error, data);
+                }
+            } else {
+                result[index] = data;
+                activeWorkersCount--;
+                if (!items.length && !activeWorkersCount) {
+                    callback(error, result);
+                }
+            }
+        };
+    }
+
+    (function run() {
+        while (activeWorkersCount < limit && items.length) {
+            operation(items.pop(), getInternalCallback(items.length));
+            activeWorkersCount++;
+        }
+
+        if (items.length && !isExceptionRaised) {
+            setTimeout(run, 0);
+        }
+    }());
 };
 
 /**
@@ -64,5 +120,10 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция filterLimit не реализована'));
+    exports.mapLimit(items, limit, operation,
+        function (error, data) {
+            callback(error, error ? null : items.filter(function (item, index) {
+                return data[index];
+            }));
+        });
 };
