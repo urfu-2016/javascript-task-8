@@ -12,6 +12,11 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
+    if (!operations.length) {
+        callback(null, []);
+
+        return;
+    }
     var currentIndex = 0;
 
     function internalCallback(error, data) {
@@ -76,6 +81,11 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
+    if (!items.length) {
+        callback(null, []);
+
+        return;
+    }
     items = items.slice();
     var activeWorkersCount = 0;
 
