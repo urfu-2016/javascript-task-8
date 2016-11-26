@@ -12,7 +12,50 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    console.info(operations, callback);
+    var len = operations.length - 1;
+    if (!len) {
+        callback(null, null);
+
+        return;
+    }
+    var index = 0;
+    var next = function (err, data) {
+        if (len === index || err) {
+            callback(err, data);
+        } else {
+            operations[++index](data, next);
+        }
+    };
+    operations[index](next);
+};
+
+/**
+ * Паралельное выполнение
+ * @param {Function[]} operations – функции для выполнения
+ * @param {Number} limit – максимальное количество выполняемых параллельно операций
+ * @param {Function} callback
+ */
+var parallel = function (operations, limit, callback) {
+    var len = operations.length;
+    var nextOperations = operations.splice(limit);
+    var result = [];
+    var next = function (err, data) {
+        if (err) {
+            callback(err);
+        } else {
+            result.push(data);
+            var nextOperation = nextOperations.shift();
+            if (nextOperation) {
+                nextOperation(next);
+            }
+        }
+        if (result.length === len) {
+            callback(null, result);
+        }
+    };
+    operations.forEach(function (operation) {
+        operation(next);
+    });
 };
 
 /**
@@ -22,7 +65,7 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    this.mapLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -32,15 +75,25 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    this.filterLimit(items, Infinity, operation, callback);
 };
 
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
  */
 exports.makeAsync = function (func) {
-    console.info(func);
+    return function () {
+        setTimeout(function (args) {
+            var callback = args.pop();
+            try {
+                callback(null, func.apply(null, args));
+            } catch (err) {
+                callback(err);
+            }
+        }, 0, [].slice.call(arguments));
+    };
 };
 
 /**
@@ -52,7 +105,18 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция mapLimit не реализована'));
+    var len = items.length;
+    if (!len) {
+        callback(null, null);
+
+        return;
+    }
+    var operations = items.map(function (item) {
+        return function (cb) {
+            operation(item, cb);
+        };
+    });
+    parallel(operations, limit, callback);
 };
 
 /**
@@ -64,5 +128,19 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция filterLimit не реализована'));
+    this.mapLimit(items, limit, operation, function (err, data) {
+        if (err) {
+            callback(err, data);
+        } else {
+            data = data.reduce(function (res, item) {
+                var newItem = items.shift();
+                if (item) {
+                    res.push(newItem);
+                }
+
+                return res;
+            }, []);
+            callback(null, data);
+        }
+    });
 };
