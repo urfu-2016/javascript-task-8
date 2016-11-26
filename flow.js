@@ -12,7 +12,7 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    var len = operations.length - 1;
+    var len = operations.length;
     if (!len) {
         callback(null, null);
 
@@ -20,7 +20,7 @@ exports.serial = function (operations, callback) {
     }
     var index = 0;
     var next = function (err, data) {
-        if (len === index || err) {
+        if (len - 1 === index || err) {
             callback(err, data);
         } else {
             operations[++index](data, next);
@@ -41,7 +41,7 @@ var parallel = function (operations, limit, callback) {
     var result = [];
     var next = function (err, data) {
         if (err) {
-            callback(err);
+            callback(err, data);
         } else {
             result.push(data);
             var nextOperation = nextOperations.shift();
@@ -90,7 +90,7 @@ exports.makeAsync = function (func) {
             try {
                 callback(null, func.apply(null, args));
             } catch (err) {
-                callback(err);
+                callback(err, null);
             }
         }, 0, [].slice.call(arguments));
     };
@@ -132,15 +132,10 @@ exports.filterLimit = function (items, limit, operation, callback) {
         if (err) {
             callback(err, data);
         } else {
-            data = data.reduce(function (res, item) {
-                var newItem = items.shift();
-                if (item) {
-                    res.push(newItem);
-                }
-
-                return res;
-            }, []);
-            callback(null, data);
+            data = items.filter(function (item, index) {
+                return data[index];
+            });
+            callback(err, data);
         }
     });
 };
