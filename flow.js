@@ -41,7 +41,7 @@ var parallel = function (operations, limit, callback) {
     var result = [];
     var next = function (err, data) {
         if (err) {
-            callback(err, data);
+            callback(err, []);
         } else {
             result.push(data);
             var nextOperation = nextOperations.shift();
@@ -130,7 +130,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 exports.filterLimit = function (items, limit, operation, callback) {
     this.mapLimit(items, limit, operation, function (err, data) {
         if (err) {
-            callback(err);
+            callback(err, []);
         } else {
             data = items.filter(function (item, index) {
                 return data[index];
