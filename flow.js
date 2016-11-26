@@ -90,7 +90,7 @@ exports.makeAsync = function (func) {
             try {
                 callback(null, func.apply(null, args));
             } catch (err) {
-                callback(err, null);
+                callback(err);
             }
         }, 0, [].slice.call(arguments));
     };
@@ -135,7 +135,7 @@ exports.filterLimit = function (items, limit, operation, callback) {
             data = items.filter(function (item, index) {
                 return data[index];
             });
-            callback(err, data);
+            callback(null, data);
         }
     });
 };
