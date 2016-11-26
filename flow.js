@@ -107,7 +107,7 @@ exports.makeAsync = function (func) {
 exports.mapLimit = function (items, limit, operation, callback) {
     var len = items.length;
     if (!len) {
-        callback(null, null);
+        callback(null, []);
 
         return;
     }
@@ -130,7 +130,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 exports.filterLimit = function (items, limit, operation, callback) {
     this.mapLimit(items, limit, operation, function (err, data) {
         if (err) {
-            callback(err, data);
+            callback(err);
         } else {
             data = items.filter(function (item, index) {
                 return data[index];
