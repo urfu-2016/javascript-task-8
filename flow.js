@@ -55,7 +55,7 @@ exports.filter = function (items, operation, callback) {
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
- * @returns {Function} 
+ * @returns {Function}
  func - функция попадающая в очередь событий
  */
 exports.makeAsync = function (func) {
