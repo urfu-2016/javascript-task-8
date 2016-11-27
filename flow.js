@@ -47,7 +47,12 @@ exports.serial = function (operations, callback) {
 
             return;
         }
-        operationsStack.pop()(result, serialCallback);
+        var currentOperation = operationsStack.pop();
+        if (result) {
+            currentOperation(result, serialCallback);
+        } else {
+            currentOperation(serialCallback);
+        }
     }
     operationsStack.pop()(serialCallback);
 };
