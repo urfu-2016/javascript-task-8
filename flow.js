@@ -15,7 +15,7 @@ exports.serial = function (operations, callback) {
     var currentIndex = 0;
 
     (function internalCallback(error, data) {
-        if (currentIndex >= operations.length || error) {
+        if (!operations || currentIndex >= operations.length || error) {
             callback(error, data);
         } else {
             operations[currentIndex++](data || internalCallback, internalCallback);

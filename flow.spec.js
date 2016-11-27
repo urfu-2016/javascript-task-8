@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-shadow */
+/* eslint-disable max-nested-callbacks  */
 'use strict';
 
 var fs = require('fs');
@@ -10,55 +11,7 @@ var flow = require('./flow');
 var directory = './data/';
 
 describe('flow', function () {
-    it('должен правильно посчитать суммарную стоимость', function (done) {
-        var jsonParseAsync = flow.makeAsync(JSON.parse);
-
-        flow.serial([
-            function (next) {
-                fs.readdir(directory, next);
-            },
-
-            flow.makeAsync(function (files) {
-                return files.map(function (dir) {
-                    return path.join(directory, dir);
-                });
-            }),
-
-            function (files, next) {
-                flow.filter(files, function (file, next) {
-                    fs.stat(file, function (err, stat) {
-                        if (err) {
-                            return next(err);
-                        }
-
-                        // Первый аргумент соответствует ошибке
-                        next(null, stat.size > 0);
-                    });
-                }, next);
-            },
-
-            function (files, next) {
-                flow.map(files, fs.readFile, next);
-            },
-
-            function (files, next) {
-                flow.map(files, jsonParseAsync, next);
-            }
-
-        ], function (error, contents) {
-            assert.ifError(error);
-
-            var total = contents.reduce(function (sum, content) {
-                return sum + content.price;
-            }, 0);
-
-            assert.strictEqual(total, 111000);
-
-            done();
-        });
-    });
-
-    if (flow.isStar) {
+    describe('serial', function () {
         it('должен правильно посчитать суммарную стоимость [*]', function (done) {
             var jsonParseAsync = flow.makeAsync(JSON.parse);
 
@@ -102,5 +55,90 @@ describe('flow', function () {
                 done();
             });
         });
-    }
+
+        it('should stop on exception', function (done) {
+            flow.serial([
+                function (next) {
+                    setTimeout(function () {
+                        next(new TypeError(), 123);
+                    }, 0);
+                },
+                function (data, next) {
+                    setTimeout(function () {
+                        next(new RangeError(), 324);
+                    });
+                }
+            ], function (error, data) {
+                assert.strictEqual(data, 123);
+                assert.ok(error instanceof TypeError);
+
+                done();
+            });
+        });
+
+        it('should stop on falsy operations', function (done) {
+            flow.serial(undefined,
+                function (error, data) {
+                    assert.strictEqual(error, undefined);
+                    assert.strictEqual(data, undefined);
+                    done();
+                });
+        });
+    });
+
+    describe('makeAsync', function () {
+        var asyncConcat = flow.makeAsync(function (a, b) {
+            return a.concat(b);
+        });
+
+        it('should make synchronous function asynchronous (1)', function (done) {
+            asyncConcat([3], [4], function (error, data) {
+                assert.ifError(error);
+                assert.deepEqual(data, [3, 4]);
+
+                done();
+            });
+        });
+
+        it('should make synchronous function asynchronous (2)', function (done) {
+            asyncConcat(null, [3], function (error) {
+                assert.ok(error instanceof TypeError);
+
+                done();
+            });
+        });
+    });
+
+    describe('mapLimit', function () {
+        it('should make correct mapping', function (done) {
+            var asyncSum = flow.makeAsync(function (a) {
+                return a + 5;
+            });
+            flow.mapLimit([1, 2, 3, 4], 3, asyncSum,
+                function (error, result) {
+                    assert.ifError(error);
+                    assert.deepEqual(result, [6, 7, 8, 9]);
+
+                    done();
+                });
+        });
+
+        it('should stop on first exception', function (done) {
+            flow.mapLimit([1, 2, 3, 4], 2,
+                flow.makeAsync(function (item) {
+                    if (item === 3) {
+                        throw new TypeError();
+                    }
+
+                    return 10 - item;
+                }),
+                function (error, data) {
+                    assert.ok(error instanceof TypeError);
+                    assert.ok(!data);
+
+                    done();
+                }
+            );
+        });
+    });
 });
