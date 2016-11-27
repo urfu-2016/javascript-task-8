@@ -103,7 +103,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
     }
 
     (function run() {
-        while (activeWorkersCount < limit && items.length) {
+        while (activeWorkersCount < limit && items.length && !isExceptionRaised) {
             operation(items.pop(), getInternalCallback(items.length));
             activeWorkersCount++;
         }
