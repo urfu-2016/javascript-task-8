@@ -18,7 +18,8 @@ exports.serial = function (operations, callback) {
         if (currentIndex >= operations.length || error) {
             callback(error, data);
         } else {
-            operations[currentIndex++](data || internalCallback, internalCallback);
+            operations[currentIndex](currentIndex++ > 0 ? data : internalCallback,
+                internalCallback);
         }
     }());
 };
@@ -53,7 +54,7 @@ exports.makeAsync = function (func) {
         setTimeout(function (args) {
             var callback = args.pop();
             var result;
-            var error;
+            var error = null;
             try {
                 result = func.apply(null, args);
             } catch (e) {
@@ -85,7 +86,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             if (error || isExceptionRaised) {
                 if (!isExceptionRaised) {
                     isExceptionRaised = true;
-                    callback(error, data);
+                    callback(error);
                 }
             } else {
                 result[index] = data;
