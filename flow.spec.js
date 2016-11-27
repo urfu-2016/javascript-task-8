@@ -110,7 +110,7 @@ describe('flow', function () {
     });
 
     describe('mapLimit', function () {
-        it('should make correct mapping', function (done) {
+        it('should make correct mapping, i.e. save the order', function (done) {
             var asyncSum = flow.makeAsync(function (a) {
                 return a + 5;
             });

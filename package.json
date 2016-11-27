@@ -3,7 +3,7 @@
   "main": "flow.js",
   "scripts": {
     "lint": "eslint .",
-    "test": "mocha *.spec.js"
+    "test": "eslint . && mocha *.spec.js"
   },
   "dependencies": {
     "eslint": "3.7.0",
