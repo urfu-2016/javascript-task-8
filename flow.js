@@ -12,21 +12,21 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    var len = operations.length;
-    if (!len) {
+    var length = operations.length;
+    if (!length) {
         callback(null, null);
 
         return;
     }
     var index = 0;
     var next = function (err, data) {
-        if (len - 1 === index || err) {
+        if (length === index || err) {
             callback(err, data);
         } else {
-            operations[++index](data, next);
+            operations[index++](data, next);
         }
     };
-    operations[index](next);
+    operations[index++](next);
 };
 
 /**
@@ -36,12 +36,12 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 var parallel = function (operations, limit, callback) {
-    var len = operations.length;
+    var length = operations.length;
     var nextOperations = operations.splice(limit);
     var result = [];
     var next = function (err, data) {
         if (err) {
-            callback(err, []);
+            callback(err, data);
         } else {
             result.push(data);
             var nextOperation = nextOperations.shift();
@@ -49,7 +49,7 @@ var parallel = function (operations, limit, callback) {
                 nextOperation(next);
             }
         }
-        if (result.length === len) {
+        if (result.length === length) {
             callback(null, result);
         }
     };
@@ -90,7 +90,7 @@ exports.makeAsync = function (func) {
             try {
                 callback(null, func.apply(null, args));
             } catch (err) {
-                callback(err);
+                callback(err, null);
             }
         }, 0, [].slice.call(arguments));
     };
@@ -105,8 +105,7 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    var len = items.length;
-    if (!len) {
+    if (!items.length) {
         callback(null, []);
 
         return;
@@ -130,7 +129,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 exports.filterLimit = function (items, limit, operation, callback) {
     this.mapLimit(items, limit, operation, function (err, data) {
         if (err) {
-            callback(err, []);
+            callback(err, data);
         } else {
             data = items.filter(function (item, index) {
                 return data[index];
