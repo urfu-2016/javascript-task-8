@@ -1,6 +1,8 @@
 /* eslint-env mocha */
 /* eslint-disable no-shadow */
 /* eslint-disable max-nested-callbacks  */
+/* eslint-disable no-empty-function  */
+/* eslint-disable handle-callback-err  */
 'use strict';
 
 var fs = require('fs');
@@ -110,6 +112,13 @@ describe('flow', function () {
     });
 
     describe('mapLimit', function () {
+        function mapIteratee(callOrder, x, callback) {
+            setTimeout(function () {
+                callOrder.push(x);
+                callback(null, x * 2);
+            }, x * 25);
+        }
+
         it('should make correct mapping, i.e. save the order', function (done) {
             var asyncSum = flow.makeAsync(function (a) {
                 return a + 5;
@@ -139,6 +148,154 @@ describe('flow', function () {
                     done();
                 }
             );
+        });
+
+        it('mapLimit does not continue replenishing after error', function (done) {
+            var started = 0;
+            var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            var delay = 10;
+            var limit = 3;
+            var maxTime = 10 * arr.length;
+
+            flow.mapLimit(arr, limit, function (x, callback) {
+                started++;
+                if (started === 3) {
+                    return callback(new Error ('Test Error'));
+                }
+                setTimeout(function () {
+                    callback();
+                }, delay);
+            }, function () {});
+
+            setTimeout(function () {
+                assert.strictEqual(started, 3);
+                done();
+            }, maxTime);
+        });
+
+        it('mapLimit error', function (done) {
+            var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            var callOrder = [];
+
+            flow.mapLimit(arr, 3, function (x, callback) {
+                callOrder.push(x);
+                if (x === 2) {
+                    callback('error');
+                }
+            }, function (err) {
+                assert.deepEqual(callOrder, [0, 1, 2]);
+                assert.strictEqual(err, 'error');
+            });
+            setTimeout(done, 25);
+        });
+
+        it('mapLimit zero limit', function (done) {
+            flow.mapLimit([0, 1, 2, 3, 4, 5], 0, function (x, callback) {
+                assert(false, 'iteratee should not be called');
+                callback();
+            }, function (err, results) {
+                assert.deepEqual(results, []);
+                assert(true, 'should call callback');
+            });
+            setTimeout(done, 25);
+        });
+
+        it('mapLimit limit equal size', function (done) {
+            var callOrder = [];
+            flow.mapLimit([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 10, mapIteratee.bind(null, callOrder),
+                function (err, results) {
+                    assert.deepEqual(callOrder, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                    assert.deepEqual(results, [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
+                    done();
+                });
+        });
+
+        it('map original untouched', function (done) {
+            var a = [1, 2, 3];
+            flow.map(a, function (x, callback) {
+                callback(null, x * 2);
+            }, function (err, results) {
+                assert.deepEqual(results, [2, 4, 6]);
+                assert.deepEqual(a, [1, 2, 3]);
+                done();
+            });
+        });
+
+        it('map error', function (done) {
+            flow.map([1, 2, 3], function (x, callback) {
+                callback('error');
+            }, function (err) {
+                assert.strictEqual(err, 'error');
+            });
+            setTimeout(done, 50);
+        });
+
+        it('map undefined array', function (done) {
+            flow.map(undefined, function (x, callback) {
+                callback();
+            }, function (err, result) {
+                assert.strictEqual(err, null);
+                assert.deepEqual(result, []);
+            });
+            setTimeout(done, 50);
+        });
+
+        it('mapLimit', function (done) {
+            var callOrder = [];
+            flow.mapLimit([2, 4, 3], 2, mapIteratee.bind(null, callOrder), function (err, results) {
+                assert(err === null, err + ' passed instead of "null"');
+                assert.deepEqual(callOrder, [2, 4, 3]);
+                assert.deepEqual(results, [4, 8, 6]);
+                done();
+            });
+        });
+
+        it('mapLimit empty array', function (done) {
+            flow.mapLimit([], 2, function (x, callback) {
+                assert(false, 'iteratee should not be called');
+                callback();
+            }, function (err) {
+                if (err) {
+                    throw err;
+                }
+                assert(true, 'should call callback');
+            });
+            setTimeout(done, 25);
+        });
+
+        it('mapLimit undefined array', function (done) {
+            flow.mapLimit(undefined, 2, function (x, callback) {
+                callback();
+            }, function (err, result) {
+                assert.strictEqual(err, null);
+                assert.deepEqual(result, []);
+            });
+            setTimeout(done, 50);
+        });
+
+        it('mapLimit limit exceeds size', function (done) {
+            var callOrder = [];
+            flow.mapLimit([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 20, mapIteratee.bind(null, callOrder),
+                function (err, results) {
+                    assert.deepEqual(callOrder, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                    assert.deepEqual(results, [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
+                    done();
+                });
+        });
+
+        it('map main callback is called only once', function (done) {
+            flow.map([1, 2], function (item, callback) {
+                try {
+                    callback(item);
+                } catch (exception) {
+                    assert.throws(function () {
+                        callback(exception);
+                    }, /already called/);
+                    done();
+                }
+            }, function () {
+                throw new Error();
+            });
         });
     });
 });

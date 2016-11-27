@@ -1,10 +1,23 @@
 'use strict';
 
+/* eslint-disable no-invalid-this */
+
 /**
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
 exports.isStar = true;
+
+function once(fn) {
+    return function () {
+        if (fn === null) {
+            throw new Error('Callback was already called.');
+        }
+        var callFn = fn;
+        fn = null;
+        callFn.apply(this, arguments);
+    };
+}
 
 /**
  * Последовательное выполнение операций
@@ -13,9 +26,11 @@ exports.isStar = true;
  */
 exports.serial = function (operations, callback) {
     var currentIndex = 0;
+    callback = once(callback);
+    operations = operations || [];
 
     (function internalCallback(error, data) {
-        if (!operations || currentIndex >= operations.length || error) {
+        if (currentIndex >= operations.length || error) {
             callback(error, error ? undefined : data);
         } else {
             operations[currentIndex++](data || internalCallback, internalCallback);
@@ -51,9 +66,9 @@ exports.filter = function (items, operation, callback) {
 exports.makeAsync = function (func) {
     return function () {
         setTimeout(function (args) {
-            var callback = args.pop();
-            var result = null;
-            var error = null;
+            var callback = once(args.pop());
+            var result;
+            var error;
             try {
                 result = func.apply(null, args);
             } catch (e) {
@@ -75,13 +90,14 @@ exports.makeAsync = function (func) {
  */
 exports.mapLimit = function (items, limit, operation, callback) {
     items = (items || []).slice();
+    callback = once(callback);
     var activeWorkersCount = 0;
 
     var result = [];
     var isExceptionRaised = false;
 
     function getInternalCallback(index) {
-        return function internalCallback(error, data) {
+        return once(function internalCallback(error, data) {
             if (error || isExceptionRaised) {
                 if (!isExceptionRaised) {
                     isExceptionRaised = true;
@@ -92,17 +108,17 @@ exports.mapLimit = function (items, limit, operation, callback) {
                 activeWorkersCount--;
                 run();
             }
-        };
+        });
     }
 
     function run() {
         while (activeWorkersCount < limit && items.length && !isExceptionRaised) {
-            operation(items.pop(), getInternalCallback(items.length));
+            operation(items.shift(), getInternalCallback(items.length));
             activeWorkersCount++;
         }
 
         if (!items.length && !activeWorkersCount) {
-            callback(null, result);
+            callback(null, result.reverse());
         }
     }
 
