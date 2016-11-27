@@ -34,6 +34,12 @@ function hasErrors(executionInfos) {
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
+    if (operations.length === 0) {
+        callback(null, null);
+
+        return;
+    }
+
     var operationsStack = operations.reverse();
     function serialCallback(error, result) {
         if (error || operationsStack.length === 0) {
@@ -97,6 +103,11 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
+    if (items.length === 0) {
+        callback(null, []);
+
+        return;
+    }
     var results = [];
 
     var executionInfos = items.map(function (value, index) {
