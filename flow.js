@@ -75,7 +75,7 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    items = (items || []).slice();
+    items = (items || []).slice().reverse();
     var activeWorkersCount = 0;
 
     var result = [];
@@ -98,7 +98,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
     function run() {
         while (activeWorkersCount < limit && items.length && !isExceptionRaised) {
-            operation(items.shift(), getInternalCallback(items.length));
+            operation(items.pop(), getInternalCallback(items.length));
             activeWorkersCount++;
         }
 
