@@ -30,7 +30,7 @@ exports.serial = function (operations, callback) {
 };
 
 /**
- * Паралельное выполнение
+ * Паралельное выполнение операций
  * @param {Function[]} operations – функции для выполнения
  * @param {Number} limit – максимальное количество выполняемых параллельно операций
  * @param {Function} callback
