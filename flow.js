@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = true;
+exports.isStar = false;
 
 /**
  * Последовательное выполнение операций
@@ -90,7 +90,7 @@ exports.makeAsync = function (func) {
             try {
                 callback(null, func.apply(null, args));
             } catch (err) {
-                callback(err, null);
+                callback(err);
             }
         }, 0, [].slice.call(arguments));
     };
