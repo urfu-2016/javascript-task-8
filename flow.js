@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = false;
+exports.isStar = true;
 
 /**
  * Последовательное выполнение операций
@@ -39,22 +39,27 @@ var parallel = function (operations, limit, callback) {
     var length = operations.length;
     var nextOperations = operations.splice(limit);
     var result = [];
-    var next = function (err, data) {
-        if (err) {
-            callback(err, data);
-        } else {
-            result.push(data);
-            var nextOperation = nextOperations.shift();
-            if (nextOperation) {
-                nextOperation(next);
+    var processId = 0;
+    var closeProcess = 0;
+    var next = function (id) {
+        return function (err, data) {
+            if (err) {
+                callback(err, data);
+            } else {
+                result[id] = data;
+                closeProcess++;
+                var nextOperation = nextOperations.shift();
+                if (nextOperation) {
+                    nextOperation(next(processId++));
+                }
             }
-        }
-        if (result.length === length) {
-            callback(null, result);
-        }
+            if (closeProcess === length) {
+                callback(null, result);
+            }
+        };
     };
     operations.forEach(function (operation) {
-        operation(next);
+        operation(next(processId++));
     });
 };
 
