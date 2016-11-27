@@ -6,20 +6,20 @@
  */
 exports.isStar = true;
 
-function makeIterator(array) {
-    var nextIndex = 0;
-
-    return {
-        next: function () {
-            return nextIndex < array.length
-                ? { value: array[nextIndex], index: nextIndex++ }
-                : null;
-        },
-        hasAny: function () {
-            return nextIndex === array.length;
-        }
-    };
+function Iterator(array) {
+    this.nextIndex = 0;
+    this.array = array;
 }
+
+Iterator.prototype.next = function () {
+    return this.nextIndex < this.array.length
+        ? { value: this.array[this.nextIndex], index: this.nextIndex++ }
+        : null;
+};
+
+Iterator.prototype.hasAny = function () {
+    return this.nextIndex === this.array.length;
+};
 
 /**
  * Последовательное выполнение операций
@@ -86,7 +86,7 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    var itemsIterator = makeIterator(items || []);
+    var itemsIterator = new Iterator(items || []);
     var activeWorkersCount = 0;
 
     var result = [];
