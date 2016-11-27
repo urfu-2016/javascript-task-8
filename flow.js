@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style  */
 'use strict';
 
 /**
@@ -122,8 +123,13 @@ exports.mapLimit = function (items, limit, operation, callback) {
     function internalCallback(executionInfo, error, result) {
         executionInfo.finished = true;
 
+        if (hasErrors(executionInfos)) {
+            return;
+        }
+
         if (error) {
             executionInfo.error = error;
+            callback(error);
         }
 
         results[executionInfo.index] = result;
@@ -134,7 +140,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             nextExecutionInfo.started = true;
         }
 
-        if (!hasErrors(executionInfos) && allFinished(executionInfos)) {
+        if (allFinished(executionInfos)) {
             callback(null, results);
         }
     }
