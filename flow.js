@@ -99,7 +99,7 @@ exports.makeAsync = function (func) {
 exports.mapLimit = function (items, limit, operation, callback) {
     var results = [];
 
-    var executionInfos = items.map(function(value, index) {
+    var executionInfos = items.map(function (value, index) {
         return {
             'value': value,
             'index': index,
@@ -109,21 +109,21 @@ exports.mapLimit = function (items, limit, operation, callback) {
         };
     });
 
-    function internalCallback(error, result) {
-        this.finished = true;
+    function internalCallback(executionInfo, error, result) {
+        executionInfo.finished = true;
 
         if (error) {
-            this.error = error;
+            executionInfo.error = error;
         }
         if (hasErrors(executionInfos)) {
             return;
         }
 
-        results[this.index] = result;
+        results[executionInfo.index] = result;
 
         var nextExecutionInfo = getFirstNotStarted(executionInfos);
         if (nextExecutionInfo) {
-            operation(nextExecutionInfo.value, internalCallback.bind(nextExecutionInfo));
+            operation(nextExecutionInfo.value, internalCallback.bind(null, nextExecutionInfo));
             nextExecutionInfo.started = true;
         }
 
@@ -133,7 +133,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
     }
 
     for (var i = 0; i < Math.min(limit, executionInfos.length); i++) {
-        operation(executionInfos[i].value, internalCallback.bind(executionInfos[i]));
+        operation(executionInfos[i].value, internalCallback.bind(null, executionInfos[i]));
         executionInfos[i].started = true;
     }
 };
@@ -147,7 +147,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    exports.mapLimit(items, limit, operation, function(error, results) {
+    exports.mapLimit(items, limit, operation, function (error, results) {
         if (error) {
             callback(error);
 
