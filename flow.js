@@ -74,7 +74,7 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    items = items.slice();
+    items = (items || []).slice();
     var activeWorkersCount = 0;
 
     var result = [];
