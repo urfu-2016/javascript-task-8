@@ -18,8 +18,7 @@ exports.serial = function (operations, callback) {
         if (currentIndex >= operations.length || error) {
             callback(error, data);
         } else {
-            operations[currentIndex](currentIndex++ > 0 ? data : internalCallback,
-                internalCallback);
+            operations[currentIndex++](data || internalCallback, internalCallback);
         }
     }());
 };
@@ -53,7 +52,7 @@ exports.makeAsync = function (func) {
     return function () {
         setTimeout(function (args) {
             var callback = args.pop();
-            var result;
+            var result = null;
             var error = null;
             try {
                 result = func.apply(null, args);
