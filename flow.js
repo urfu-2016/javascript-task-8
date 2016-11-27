@@ -11,32 +11,6 @@ exports.isStar = true;
  * @param {Function[]} operations – функции для выполнения
  * @param {Function} callback
  */
-/* exports.serial = function (operations, callback) {
-    var promise = Promise.resolve(null);
-
-    operations.forEach(function (operation) {
-        promise = promise.then(function (result) {
-            return new Promise(function (resolve, reject) {
-                var promiseCallback = function (error, data) {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(data);
-                    }
-                };
-
-                if (result) {
-                    operation(result, promiseCallback);
-                } else {
-                    operation(promiseCallback);
-                }
-            });
-        }, callback);
-    });
-    promise.then(function (result) {
-        callback(null, result);
-    });
-};*/
 exports.serial = function (operations, callback) {
     if (operations.length === 0) {
         callback(null, null);
@@ -70,19 +44,6 @@ exports.serial = function (operations, callback) {
  * @param {Function} operation – функция для обработки элементов
  * @param {Function} callback
  */
-/* exports.map = function (items, operation, callback) {
-    var promises = items.map(function (item) {
-        return new Promise(function (resolve, reject) {
-            operation(item, function (error, data) {
-                resolve(data);
-            });
-        });
-    });
-
-    Promise.all(promises).then(function (result) {
-        callback(null, result);
-    });
-};*/
 exports.map = function (items, operation, callback) {
     exports.mapLimit(items, Infinity, operation, callback);
 };
@@ -105,20 +66,14 @@ exports.filter = function (items, operation, callback) {
 exports.makeAsync = function (func) {
     return function () {
         setTimeout(function (args) {
-            var callback = args[args.length - 1];
-            args = Array.prototype.slice.call(args, 0, -1);
-            var result;
+            var callback = args.pop();
 
             try {
-                result = func.apply(null, args);
+                callback(null, func.apply(null, args));
             } catch (error) {
                 callback(error);
-
-                return;
             }
-
-            callback(null, result);
-        }, 0, arguments);
+        }, 0, Array.prototype.slice.call(arguments));
     };
 };
 
@@ -135,7 +90,6 @@ exports.mapLimit = function (items, limit, operation, callback) {
         callback(null, []);
     }
 
-    var finished = 0;
     var activeWorkersCount = 0;
     var results = [];
     var errorHappened = false;
@@ -152,9 +106,8 @@ exports.mapLimit = function (items, limit, operation, callback) {
             }
 
             results[index] = result;
-            finished++;
             activeWorkersCount--;
-            if (finished === items.length) {
+            if (activeWorkersCount === 0 && workersStarted === items.length) {
                 callback(null, results);
             }
         };
@@ -166,7 +119,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             workersStarted++;
         }
 
-        if (finished !== items.length && !errorHappened) {
+        if ((activeWorkersCount > 0 || workersStarted < items.length) && !errorHappened) {
             setTimeout(addWorkers, 10);
         }
     };
@@ -188,12 +141,8 @@ exports.filterLimit = function (items, limit, operation, callback) {
             callback(error);
         }
 
-        callback(null, results.reduce(function (filtered, result, currentIndex) {
-            if (result) {
-                filtered.push(items[currentIndex]);
-            }
-
-            return filtered;
-        }, []));
+        callback(null, items.filter(function (item, index) {
+            return results[index];
+        }));
     });
 };
