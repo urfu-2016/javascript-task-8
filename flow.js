@@ -47,12 +47,7 @@ exports.serial = function (operations, callback) {
 
             return;
         }
-        var currentOperation = operationsStack.pop();
-        if (result) {
-            currentOperation(result, serialCallback);
-        } else {
-            currentOperation(serialCallback);
-        }
+        operationsStack.pop()(result, serialCallback);
     }
     operationsStack.pop()(serialCallback);
 };
@@ -79,9 +74,8 @@ exports.filter = function (items, operation, callback) {
 
 function executeAsync(func) {
     var args = [].slice.call(arguments, 1);
+    var callback = args.pop();
     setTimeout(function () {
-        var callback = args[args.length - 1];
-        args.pop();
         try {
             callback(null, func.apply(null, args));
         } catch (error) {
@@ -113,8 +107,8 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
         return;
     }
-    var results = [];
 
+    var results = [];
     var executionInfos = items.map(function (value, index) {
         return {
             'value': value,
@@ -131,9 +125,6 @@ exports.mapLimit = function (items, limit, operation, callback) {
         if (error) {
             executionInfo.error = error;
         }
-        if (hasErrors(executionInfos)) {
-            return;
-        }
 
         results[executionInfo.index] = result;
 
@@ -143,7 +134,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             nextExecutionInfo.started = true;
         }
 
-        if (allFinished(executionInfos)) {
+        if (!hasErrors(executionInfos) && allFinished(executionInfos)) {
             callback(null, results);
         }
     }
