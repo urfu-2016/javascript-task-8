@@ -74,11 +74,6 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    if (!items.length) {
-        callback(null, []);
-
-        return;
-    }
     items = items.slice();
     var activeWorkersCount = 0;
 
@@ -95,23 +90,23 @@ exports.mapLimit = function (items, limit, operation, callback) {
             } else {
                 result[index] = data;
                 activeWorkersCount--;
-                if (!items.length && !activeWorkersCount) {
-                    callback(error, result);
-                }
+                run();
             }
         };
     }
 
-    (function run() {
+    function run() {
         while (activeWorkersCount < limit && items.length && !isExceptionRaised) {
             operation(items.pop(), getInternalCallback(items.length));
             activeWorkersCount++;
         }
 
-        if (items.length && !isExceptionRaised) {
-            setTimeout(run, 0);
+        if (!items.length && !activeWorkersCount) {
+            callback(null, result);
         }
-    }());
+    }
+
+    run();
 };
 
 /**
