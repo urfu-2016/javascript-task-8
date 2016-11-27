@@ -40,20 +40,20 @@ var parallel = function (operations, limit, callback) {
     var nextOperations = operations.splice(limit);
     var result = [];
     var processId = 0;
-    var closeProcess = 0;
+    var completedProcess = 0;
     var next = function (id) {
         return function (err, data) {
             if (err) {
-                callback(err, data);
+                callback(err);
             } else {
                 result[id] = data;
-                closeProcess++;
+                completedProcess++;
                 var nextOperation = nextOperations.shift();
                 if (nextOperation) {
                     nextOperation(next(processId++));
                 }
             }
-            if (closeProcess === length) {
+            if (completedProcess === length) {
                 callback(null, result);
             }
         };
@@ -134,7 +134,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 exports.filterLimit = function (items, limit, operation, callback) {
     this.mapLimit(items, limit, operation, function (err, data) {
         if (err) {
-            callback(err, data);
+            callback(err);
         } else {
             data = items.filter(function (item, index) {
                 return data[index];
