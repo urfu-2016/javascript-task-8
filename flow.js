@@ -1,23 +1,10 @@
 'use strict';
 
-/* eslint-disable no-invalid-this */
-
 /**
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
 exports.isStar = true;
-
-function once(fn) {
-    return function () {
-        if (fn === null) {
-            throw new Error('Callback was already called.');
-        }
-        var callFn = fn;
-        fn = null;
-        callFn.apply(this, arguments);
-    };
-}
 
 /**
  * Последовательное выполнение операций
@@ -26,7 +13,6 @@ function once(fn) {
  */
 exports.serial = function (operations, callback) {
     var currentIndex = 0;
-    callback = once(callback);
     operations = operations || [];
 
     (function internalCallback(error, data) {
@@ -66,7 +52,7 @@ exports.filter = function (items, operation, callback) {
 exports.makeAsync = function (func) {
     return function () {
         setTimeout(function (args) {
-            var callback = once(args.pop());
+            var callback = args.pop();
             var result;
             var error;
             try {
@@ -90,14 +76,13 @@ exports.makeAsync = function (func) {
  */
 exports.mapLimit = function (items, limit, operation, callback) {
     items = (items || []).slice();
-    callback = once(callback);
     var activeWorkersCount = 0;
 
     var result = [];
     var isExceptionRaised = false;
 
     function getInternalCallback(index) {
-        return once(function internalCallback(error, data) {
+        return function internalCallback(error, data) {
             if (error || isExceptionRaised) {
                 if (!isExceptionRaised) {
                     isExceptionRaised = true;
@@ -108,7 +93,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
                 activeWorkersCount--;
                 run();
             }
-        });
+        };
     }
 
     function run() {

@@ -282,20 +282,5 @@ describe('flow', function () {
                     done();
                 });
         });
-
-        it('map main callback is called only once', function (done) {
-            flow.map([1, 2], function (item, callback) {
-                try {
-                    callback(item);
-                } catch (exception) {
-                    assert.throws(function () {
-                        callback(exception);
-                    }, /already called/);
-                    done();
-                }
-            }, function () {
-                throw new Error();
-            });
-        });
     });
 });
