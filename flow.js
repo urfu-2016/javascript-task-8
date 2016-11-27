@@ -41,20 +41,21 @@ var parallel = function (operations, limit, callback) {
     var result = [];
     var processId = 0;
     var completedProcess = 0;
+    var error = null;
     var next = function (id) {
         return function (err, data) {
             if (err) {
-                callback(err);
+                error = error || err;
             } else {
                 result[id] = data;
-                completedProcess++;
-                var nextOperation = nextOperations.shift();
-                if (nextOperation) {
-                    nextOperation(next(processId++));
-                }
+            }
+            completedProcess++;
+            var nextOperation = nextOperations.shift();
+            if (nextOperation) {
+                nextOperation(next(processId++));
             }
             if (completedProcess === length) {
-                callback(null, result);
+                callback(error, result);
             }
         };
     };
