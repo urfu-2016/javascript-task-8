@@ -89,23 +89,29 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
         return;
     }
-    var operations = items.map(function (item) {
-        return operation.bind(null, item);
+    var operationsKeeper = items.map(function (item, index) {
+        return { 'op': operation.bind(null, item), 'index': index };
     });
-    var opQueue = operations.slice();
+
+    var opQueue = operationsKeeper.slice();
     var doneCount = 0;
     var activeCount = 0;
-    var result = [];
-    function execOperation(error, data) {
+    var resultDict = {};
+    function execOperation(index, error, data) {
+
         if (error) {
             callback(error, data);
 
             return;
         }
-        result.push(data);
+        resultDict[index] = data;
         doneCount++;
         activeCount--;
         if (doneCount === items.length) {
+            var result = [];
+            for (var i = 0; i < items.length; i++) {
+                result.push(resultDict[i]);
+            }
             callback(error, result);
 
             return;
@@ -118,7 +124,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
     function handleOperation(op) {
         if (activeCount < limit) {
             activeCount++;
-            op(execOperation.bind());
+            op.op(execOperation.bind(null, op.index));
         } else {
             opQueue.unshift(op);
         }
