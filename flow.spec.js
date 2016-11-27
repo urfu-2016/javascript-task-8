@@ -69,7 +69,7 @@ describe('flow', function () {
                     });
                 }
             ], function (error, data) {
-                assert.strictEqual(data, 123);
+                assert.strictEqual(data, undefined);
                 assert.ok(error instanceof TypeError);
 
                 done();

@@ -16,7 +16,7 @@ exports.serial = function (operations, callback) {
 
     (function internalCallback(error, data) {
         if (!operations || currentIndex >= operations.length || error) {
-            callback(error, data);
+            callback(error, error ? undefined : data);
         } else {
             operations[currentIndex++](data || internalCallback, internalCallback);
         }
@@ -120,7 +120,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 exports.filterLimit = function (items, limit, operation, callback) {
     exports.mapLimit(items, limit, operation,
         function (error, data) {
-            callback(error, error ? null : items.filter(function (item, index) {
+            callback(error, error ? undefined : items.filter(function (item, index) {
                 return data[index];
             }));
         });
