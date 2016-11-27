@@ -6,6 +6,21 @@
  */
 exports.isStar = true;
 
+function makeIterator(array) {
+    var nextIndex = 0;
+
+    return {
+        next: function () {
+            return nextIndex < array.length
+                ? { value: array[nextIndex], index: nextIndex++ }
+                : null;
+        },
+        hasAny: function () {
+            return nextIndex === array.length;
+        }
+    };
+}
+
 /**
  * Последовательное выполнение операций
  * @param {Function[]} operations – функции для выполнения
@@ -53,15 +68,11 @@ exports.makeAsync = function (func) {
     return function () {
         setTimeout(function (args) {
             var callback = args.pop();
-            var result;
-            var error;
             try {
-                result = func.apply(null, args);
+                callback(null, func.apply(null, args));
             } catch (e) {
-                error = e;
+                callback(e);
             }
-
-            callback(error, result);
         }, 0, [].slice.call(arguments));
     };
 };
@@ -75,14 +86,14 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    items = (items || []).slice().reverse();
+    var itemsIterator = makeIterator(items || []);
     var activeWorkersCount = 0;
 
     var result = [];
     var isExceptionRaised = false;
 
-    function getInternalCallback(index) {
-        return function internalCallback(error, data) {
+    (function run() {
+        function internalCallback(index, error, data) {
             if (error || isExceptionRaised) {
                 if (!isExceptionRaised) {
                     isExceptionRaised = true;
@@ -93,21 +104,18 @@ exports.mapLimit = function (items, limit, operation, callback) {
                 activeWorkersCount--;
                 run();
             }
-        };
-    }
+        }
 
-    function run() {
-        while (activeWorkersCount < limit && items.length && !isExceptionRaised) {
-            operation(items.pop(), getInternalCallback(items.length));
+        while (activeWorkersCount < limit && !itemsIterator.hasAny()) {
+            var nextItem = itemsIterator.next();
+            operation(nextItem.value, internalCallback.bind(null, nextItem.index));
             activeWorkersCount++;
         }
 
-        if (!items.length && !activeWorkersCount) {
-            callback(null, result.reverse());
+        if (itemsIterator.hasAny() && !activeWorkersCount) {
+            callback(null, result);
         }
-    }
-
-    run();
+    }());
 };
 
 /**

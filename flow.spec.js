@@ -150,7 +150,7 @@ describe('flow', function () {
             );
         });
 
-        it('mapLimit does not continue replenishing after error', function (done) {
+        it('does not continue replenishing after error', function (done) {
             var started = 0;
             var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
             var delay = 10;
@@ -173,7 +173,7 @@ describe('flow', function () {
             }, maxTime);
         });
 
-        it('mapLimit error', function (done) {
+        it('error', function (done) {
             var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
             var callOrder = [];
 
@@ -189,7 +189,7 @@ describe('flow', function () {
             setTimeout(done, 25);
         });
 
-        it('mapLimit zero limit', function (done) {
+        it('zero limit', function (done) {
             flow.mapLimit([0, 1, 2, 3, 4, 5], 0, function (x, callback) {
                 assert(false, 'iteratee should not be called');
                 callback();
@@ -200,7 +200,7 @@ describe('flow', function () {
             setTimeout(done, 25);
         });
 
-        it('mapLimit limit equal size', function (done) {
+        it('limit equal size', function (done) {
             var callOrder = [];
             flow.mapLimit([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 10, mapIteratee.bind(null, callOrder),
                 function (err, results) {
@@ -210,37 +210,7 @@ describe('flow', function () {
                 });
         });
 
-        it('map original untouched', function (done) {
-            var a = [1, 2, 3];
-            flow.map(a, function (x, callback) {
-                callback(null, x * 2);
-            }, function (err, results) {
-                assert.deepEqual(results, [2, 4, 6]);
-                assert.deepEqual(a, [1, 2, 3]);
-                done();
-            });
-        });
-
-        it('map error', function (done) {
-            flow.map([1, 2, 3], function (x, callback) {
-                callback('error');
-            }, function (err) {
-                assert.strictEqual(err, 'error');
-            });
-            setTimeout(done, 50);
-        });
-
-        it('map undefined array', function (done) {
-            flow.map(undefined, function (x, callback) {
-                callback();
-            }, function (err, result) {
-                assert.strictEqual(err, null);
-                assert.deepEqual(result, []);
-            });
-            setTimeout(done, 50);
-        });
-
-        it('mapLimit', function (done) {
+        it('basic', function (done) {
             var callOrder = [];
             flow.mapLimit([2, 4, 3], 2, mapIteratee.bind(null, callOrder), function (err, results) {
                 assert(err === null, err + ' passed instead of "null"');
@@ -250,7 +220,7 @@ describe('flow', function () {
             });
         });
 
-        it('mapLimit empty array', function (done) {
+        it('empty array', function (done) {
             flow.mapLimit([], 2, function (x, callback) {
                 assert(false, 'iteratee should not be called');
                 callback();
@@ -263,7 +233,7 @@ describe('flow', function () {
             setTimeout(done, 25);
         });
 
-        it('mapLimit undefined array', function (done) {
+        it('undefined array', function (done) {
             flow.mapLimit(undefined, 2, function (x, callback) {
                 callback();
             }, function (err, result) {
@@ -273,7 +243,7 @@ describe('flow', function () {
             setTimeout(done, 50);
         });
 
-        it('mapLimit limit exceeds size', function (done) {
+        it('limit exceeds size', function (done) {
             var callOrder = [];
             flow.mapLimit([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 20, mapIteratee.bind(null, callOrder),
                 function (err, results) {
@@ -281,6 +251,38 @@ describe('flow', function () {
                     assert.deepEqual(results, [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
                     done();
                 });
+        });
+    });
+
+    describe('map', function () {
+        it('original untouched', function (done) {
+            var a = [1, 2, 3];
+            flow.map(a, function (x, callback) {
+                callback(null, x * 2);
+            }, function (err, results) {
+                assert.deepEqual(results, [2, 4, 6]);
+                assert.deepEqual(a, [1, 2, 3]);
+                done();
+            });
+        });
+
+        it('error', function (done) {
+            flow.map([1, 2, 3], function (x, callback) {
+                callback('error');
+            }, function (err) {
+                assert.strictEqual(err, 'error');
+            });
+            setTimeout(done, 50);
+        });
+
+        it('undefined array', function (done) {
+            flow.map(undefined, function (x, callback) {
+                callback();
+            }, function (err, result) {
+                assert.strictEqual(err, null);
+                assert.deepEqual(result, []);
+            });
+            setTimeout(done, 50);
         });
     });
 });
