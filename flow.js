@@ -18,7 +18,11 @@ exports.serial = function (operations, callback) {
 
     function serialCallback(error, data) {
         if (!error && index !== opLen) {
-            operations[++index](data, serialCallback);
+            if (data) {
+                operations[++index](data, serialCallback);
+            } else {
+                operations[++index](serialCallback);
+            }
         } else {
             callback(error, data);
         }
