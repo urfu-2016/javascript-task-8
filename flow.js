@@ -13,7 +13,6 @@ exports.isStar = false;
  */
 exports.serial = function (operations, callback) {
 
-    console.info(operations, callback);
     var index = 0;
     var opLen = operations.length - 1;
 
@@ -56,7 +55,8 @@ exports.filter = function (items, operation, callback) {
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
- * @returns {Function} func - функция попадающая в очередь событий
+ * @returns {Function} 
+ func - функция попадающая в очередь событий
  */
 exports.makeAsync = function (func) {
 
