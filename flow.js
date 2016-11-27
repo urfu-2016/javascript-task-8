@@ -12,22 +12,15 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    if (!operations.length) {
-        callback(null, []);
-
-        return;
-    }
     var currentIndex = 0;
 
-    function internalCallback(error, data) {
+    (function internalCallback(error, data) {
         if (currentIndex >= operations.length || error) {
             callback(error, data);
         } else {
-            operations[currentIndex++](data, internalCallback);
+            operations[currentIndex++](data || internalCallback, internalCallback);
         }
-    }
-
-    operations[currentIndex++](internalCallback);
+    }());
 };
 
 /**
