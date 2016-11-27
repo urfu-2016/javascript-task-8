@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = false;
+exports.isStar = true;
 
 /**
  * Последовательное выполнение операций
@@ -55,8 +55,7 @@ exports.filter = function (items, operation, callback) {
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
- * @returns {Function}
- func - функция попадающая в очередь событий
+ * @returns {Function} func - функция попадающая в очередь событий
  */
 exports.makeAsync = function (func) {
 
@@ -87,40 +86,40 @@ exports.mapLimit = function (items, limit, operation, callback) {
         return;
     }
     var operations = items.map(function (item) {
-
         return operation.bind(null, item);
     });
     var opQueue = operations.slice();
     var doneCount = 0;
     var activeCount = 0;
-    var execDoneCount = 0;
     var result = [];
     function execOperation(error, data) {
         if (error) {
-            callback(error, null);
+            callback(error, data);
+
+            return;
         }
         result.push(data);
         doneCount++;
-        execDoneCount++;
+        activeCount--;
         if (doneCount === items.length) {
-            callback(null, result);
-        } else if (execDoneCount === limit) {
-            activeCount = 0;
-            execDoneCount = 0;
-            opQueue.splice(0, limit).forEach(handleOperation);
-        }
+            callback(error, result);
 
+            return;
+        }
+        if (opQueue.length) {
+            handleOperation(opQueue.shift());
+        }
     }
 
     function handleOperation(op) {
         if (activeCount < limit) {
             activeCount++;
-            op(execOperation);
+            op(execOperation.bind());
         } else {
             opQueue.unshift(op);
         }
     }
-    opQueue.splice(0, limit).forEach(handleOperation);
+    handleOperation(opQueue.shift());
 };
 
 /**
