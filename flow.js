@@ -15,7 +15,6 @@ exports.serial = function (operations, callback) {
 
     var index = 0;
     var opLen = operations.length - 1;
-
     function serialCallback(error, data) {
         if (!error && index !== opLen) {
             if (data) {
@@ -98,13 +97,15 @@ exports.mapLimit = function (items, limit, operation, callback) {
     var doneCount = 0;
     var activeCount = 0;
     var resultDict = {};
+    var isError = false;
     function execOperation(index, error, data) {
-
         if (error) {
             callback(error, data);
+            isError = true;
 
             return;
         }
+
         resultDict[index] = data;
         doneCount++;
         activeCount--;
@@ -128,6 +129,11 @@ exports.mapLimit = function (items, limit, operation, callback) {
     function handleOperation(op) {
         if (activeCount < limit) {
             activeCount++;
+            if (isError) {
+                activeCount--;
+
+                return;
+            }
             op.op(execOperation.bind(null, op.index));
         } else {
             opQueue.unshift(op);
@@ -150,6 +156,7 @@ exports.filterLimit = function (items, limit, operation, callback) {
     this.mapLimit(items, limit, operation, function (err, data) {
         if (err) {
             callback(err);
+
         } else {
             data = items.filter(function (item, index) {
 
