@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = true;
+exports.isStar = false;
 
 /**
  * Последовательное выполнение операций
@@ -89,6 +89,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
         return;
     }
+
     var operationsKeeper = items.map(function (item, index) {
         return { 'op': operation.bind(null, item), 'index': index };
     });
@@ -106,7 +107,8 @@ exports.mapLimit = function (items, limit, operation, callback) {
         }
         resultDict[index] = data;
         doneCount++;
-        activeCount--;
+        // activeCount--;
+        console.info('exec', doneCount, activeCount);
         if (doneCount === items.length) {
             var result = [];
             for (var i = 0; i < items.length; i++) {
@@ -122,12 +124,13 @@ exports.mapLimit = function (items, limit, operation, callback) {
     }
 
     function handleOperation(op) {
-        if (activeCount < limit) {
-            activeCount++;
-            op.op(execOperation.bind(null, op.index));
-        } else {
-            opQueue.unshift(op);
-        }
+        // if (activeCount < limit) {
+            // activeCount++;
+        console.info('handle', doneCount, activeCount);
+        op.op(execOperation.bind(null, op.index));
+        // } else {
+            // opQueue.unshift(op);
+        // }
     }
     handleOperation(opQueue.shift());
 };
