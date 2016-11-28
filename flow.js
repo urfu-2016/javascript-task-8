@@ -120,7 +120,7 @@ var parallel = function (functions, limit, callback) {
  */
 exports.mapLimit = function (items, limit, operation, callback) {
     if (items.length === 0) {
-        callback(null, null);
+        callback(null, []);
 
         return;
     }
