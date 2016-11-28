@@ -12,7 +12,28 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    console.info(operations, callback);
+    if (operations.length === 0) {
+        callback(null, null);
+
+        return;
+    }
+    var operationNumber = 0;
+    var localCallback = function (error, data) {
+        if (error) {
+            callback(error);
+
+            return;
+        }
+        operationNumber++;
+        if (operationNumber === operations.length) {
+            callback(error, data);
+        } else if (data) {
+            operations[operationNumber](data, localCallback);
+        } else {
+            operations[operationNumber](localCallback);
+        }
+    };
+    operations[operationNumber](localCallback);
 };
 
 /**
@@ -22,7 +43,7 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    exports.mapLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -32,15 +53,64 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    exports.filterLimit(items, Infinity, operation, callback);
 };
 
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
  */
 exports.makeAsync = function (func) {
-    console.info(func);
+    return function () {
+        setTimeout(function (args) {
+            var callback = args[args.length - 1];
+            args = Array.prototype.slice.call(args, 0, -1);
+            try {
+                callback(null, func.apply(null, args));
+            } catch (err) {
+                callback(err);
+            }
+        }, 0, arguments);
+    };
+};
+
+/**
+ * Паралельное выполнение операций
+ * @param {Function[]} functions – функции для параллельного рассчета
+ * @param {Number} limit – максимальное количество выполняемых параллельно операций
+ * @param {Function} callback
+ */
+var parallel = function (functions, limit, callback) {
+    var count = functions.length;
+    var resultData = [];
+    var errCb = false;
+    var limitArray = functions.splice(limit);
+    var funcNum = 0;
+    var cb = function (num) {
+        return function (err, data) {
+            count--;
+            if (err) {
+                if (errCb) {
+                    return;
+                }
+                callback(err, data);
+                errCb = true;
+            } else {
+                resultData[num] = data;
+                var nextOperation = limitArray.shift();
+                if (nextOperation) {
+                    nextOperation(cb(funcNum++));
+                }
+            }
+            if (count === 0 && !errCb) {
+                callback(err, resultData);
+            }
+        };
+    };
+    functions.forEach(function (operation) {
+        operation(cb(funcNum++));
+    });
 };
 
 /**
@@ -52,7 +122,17 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция mapLimit не реализована'));
+    if (items.length === 0) {
+        callback(null, null);
+
+        return;
+    }
+    var functions = items.map(function (item) {
+        return function (cb) {
+            operation(item, cb);
+        };
+    });
+    parallel(functions, limit, callback);
 };
 
 /**
@@ -64,5 +144,10 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция filterLimit не реализована'));
+    exports.mapLimit(items, limit, operation,
+        function (err, data) {
+            callback(err, err ? undefined : items.filter(function (item, index) {
+                return data[index];
+            }));
+        });
 };
