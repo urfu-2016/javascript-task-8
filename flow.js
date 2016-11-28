@@ -108,7 +108,6 @@ exports.mapLimit = function (items, limit, operation, callback) {
         resultDict[index] = data;
         doneCount++;
         activeCount--;
-        // console.info('exec', doneCount, activeCount, index);
         if (doneCount === items.length) {
             var result = [];
             for (var i = 0; i < items.length; i++) {
