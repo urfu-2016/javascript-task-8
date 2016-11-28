@@ -101,7 +101,7 @@ var parallel = function (functions, limit, callback) {
                 }
             }
             if (count === 0) {
-                callback(err, resultData);
+                callback(null, resultData);
             }
         };
     };
