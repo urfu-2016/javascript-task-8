@@ -107,8 +107,8 @@ exports.mapLimit = function (items, limit, operation, callback) {
         }
         resultDict[index] = data;
         doneCount++;
-        // activeCount--;
-        console.info('exec', doneCount, activeCount);
+        activeCount--;
+        // console.info('exec', doneCount, activeCount, index);
         if (doneCount === items.length) {
             var result = [];
             for (var i = 0; i < items.length; i++) {
@@ -119,20 +119,23 @@ exports.mapLimit = function (items, limit, operation, callback) {
             return;
         }
         if (opQueue.length) {
-            handleOperation(opQueue.shift());
+            opQueue.splice(0, limit).forEach(function (keeper) {
+                handleOperation(keeper);
+            });
         }
     }
 
     function handleOperation(op) {
-        // if (activeCount < limit) {
-            // activeCount++;
-        console.info('handle', doneCount, activeCount);
-        op.op(execOperation.bind(null, op.index));
-        // } else {
-            // opQueue.unshift(op);
-        // }
+        if (activeCount < limit) {
+            activeCount++;
+            op.op(execOperation.bind(null, op.index));
+        } else {
+            opQueue.unshift(op);
+        }
     }
-    handleOperation(opQueue.shift());
+    opQueue.splice(0, limit).forEach(function (keeper) {
+        handleOperation(keeper);
+    });
 };
 
 /**
