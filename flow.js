@@ -99,7 +99,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
     var resultDict = {};
     var isError = false;
     function execOperation(index, error, data) {
-        if (error) {
+        if (error && !isError) {
             callback(error, data);
             isError = true;
 
@@ -115,7 +115,6 @@ exports.mapLimit = function (items, limit, operation, callback) {
                 result.push(resultDict[i]);
             }
             callback(error, result);
-            //
 
             return;
         }
@@ -129,11 +128,6 @@ exports.mapLimit = function (items, limit, operation, callback) {
     function handleOperation(op) {
         if (activeCount < limit) {
             activeCount++;
-            if (isError) {
-                activeCount--;
-
-                return;
-            }
             op.op(execOperation.bind(null, op.index));
         } else {
             opQueue.unshift(op);
