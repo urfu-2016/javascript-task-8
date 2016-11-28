@@ -90,10 +90,7 @@ var parallel = function (functions, limit, callback) {
     var cb = function (num) {
         return function (err, data) {
             count--;
-            if (err) {
-                if (errCb) {
-                    return;
-                }
+            if (err && !errCb) {
                 callback(err, data);
                 errCb = true;
             } else {
@@ -103,7 +100,7 @@ var parallel = function (functions, limit, callback) {
                     nextOperation(cb(funcNum++));
                 }
             }
-            if (count === 0 && !errCb) {
+            if (count === 0) {
                 callback(err, resultData);
             }
         };
