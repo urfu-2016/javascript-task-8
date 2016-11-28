@@ -91,13 +91,13 @@ var parallel = function (functions, limit, callback) {
         return function (err, data) {
             count--;
             if (err && !errCb) {
-                callback(err, data);
+                callback(err);
                 errCb = true;
             } else {
                 resultData[num] = data;
-                var nextOperation = limitArray.shift();
-                if (nextOperation) {
-                    nextOperation(cb(funcNum++));
+                var nextFunction = limitArray.shift();
+                if (nextFunction) {
+                    nextFunction(cb(funcNum++));
                 }
             }
             if (count === 0) {
