@@ -36,7 +36,6 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 var parallel = function (operations, limit, callback) {
-    var length = operations.length;
     var nextOperations = operations.splice(limit);
     var result = [];
     var processId = 0;
@@ -49,16 +48,12 @@ var parallel = function (operations, limit, callback) {
             } else {
                 result[id] = data;
             }
-            completedProcess++;
             var nextOperation = nextOperations.shift();
-            if (nextOperation) {
-                if (error) {
-                    completedProcess++;
-                } else {
-                    nextOperation(next(processId++));
-                }
+            if (nextOperation && !error) {
+                nextOperation(next(processId++));
             }
-            if (completedProcess === length) {
+            completedProcess++;
+            if (completedProcess === processId) {
                 callback(error, result);
             }
         };
