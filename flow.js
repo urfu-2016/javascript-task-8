@@ -6,6 +6,8 @@
  */
 exports.isStar = true;
 
+var WORKER_SPAWN_TIMEOUT = 10;
+
 /**
  * Последовательное выполнение операций
  * @param {Function[]} operations – функции для выполнения
@@ -19,6 +21,7 @@ exports.serial = function (operations, callback) {
     }
 
     var currentIndex = 0;
+    var firstOperation = operations[currentIndex];
     var localCallback = function (error, result) {
         if (error) {
             callback(error);
@@ -29,13 +32,23 @@ exports.serial = function (operations, callback) {
         currentIndex++;
         if (currentIndex === operations.length) {
             callback(error, result);
-        } else if (result) {
-            operations[currentIndex](result, localCallback);
+
+            return;
+        }
+
+        var nextOperation = operations[currentIndex];
+        if (nextOperation.length === 2) {
+            nextOperation(result, localCallback);
         } else {
-            operations[currentIndex](localCallback);
+            nextOperation(localCallback);
         }
     };
-    operations[currentIndex](localCallback);
+
+    if (firstOperation.length === 2) {
+        firstOperation(null, localCallback);
+    } else {
+        firstOperation(localCallback);
+    }
 };
 
 /**
@@ -64,17 +77,24 @@ exports.filter = function (items, operation, callback) {
  * @returns {Function}
  */
 exports.makeAsync = function (func) {
-    return function () {
+    var asyncFunc = function () {
         setTimeout(function (args) {
             var callback = args.pop();
 
             try {
-                callback(null, func.apply(null, args));
+                callback(null, func.apply(global, args));
             } catch (error) {
                 callback(error);
             }
         }, 0, Array.prototype.slice.call(arguments));
     };
+
+    Object.defineProperty(asyncFunc, 'length', {
+        value: func.length + 1,
+        'writable': false
+    });
+
+    return asyncFunc;
 };
 
 /**
@@ -113,14 +133,18 @@ exports.mapLimit = function (items, limit, operation, callback) {
         };
     };
     var addWorkers = function () {
+        if (errorHappened) {
+            return;
+        }
+
         while (activeWorkersCount < limit && workersStarted < items.length) {
             operation(items[workersStarted], localCallback(workersStarted));
             activeWorkersCount++;
             workersStarted++;
         }
 
-        if ((activeWorkersCount > 0 || workersStarted < items.length) && !errorHappened) {
-            setTimeout(addWorkers, 10);
+        if (workersStarted < items.length) {
+            setTimeout(addWorkers, WORKER_SPAWN_TIMEOUT);
         }
     };
 
