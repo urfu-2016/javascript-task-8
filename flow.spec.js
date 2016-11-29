@@ -2,6 +2,7 @@
 /* eslint-disable no-shadow */
 /* eslint-disable max-nested-callbacks  */
 /* eslint-disable no-empty-function  */
+/* eslint-disable no-invalid-this  */
 /* eslint-disable handle-callback-err  */
 'use strict';
 
@@ -251,6 +252,34 @@ describe('flow', function () {
                     assert.deepEqual(results, [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
                     done();
                 });
+        });
+
+        it('do really no more than `limit` operations at a time', function (done) {
+            this.timeout(50000);
+
+            var data = [];
+            for (var i = 0; i < 1000; i++) {
+                data.push(i);
+            }
+            var currentOperationsCount = 0;
+            var LIMIT = 50;
+
+            flow.mapLimit(data, LIMIT,
+                function (item, cb) {
+                    if (currentOperationsCount > LIMIT) {
+                        cb(new Error('Limit don\'t work'));
+                    }
+                    currentOperationsCount++;
+                    setTimeout(function () {
+                        currentOperationsCount--;
+                        cb(null, item);
+                    }, 50);
+                },
+                function (error) {
+                    assert.ifError(error);
+                    done();
+                });
+
         });
     });
 
