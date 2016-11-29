@@ -28,7 +28,11 @@ exports.serial = function (operations, callback) {
         }
     }
 
-    operations[operationIndex](innerCallback);
+    if (operations && operations !== 0) {
+        operations[operationIndex](innerCallback);
+    } else {
+        callback(null, null);
+    }
 };
 
 function Worker(items, operation, callback, convert) {
@@ -87,11 +91,7 @@ Worker.prototype.startWork = function (limit) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    var worker = new Worker(items, operation, callback, function (result) {
-        return result;
-    });
-
-    worker.startWork(Infinity);
+    exports.mapLimit(items, Infinity, operation, callback);
 };
 
 function getFilteredItems(items, array) {
@@ -113,11 +113,7 @@ function getFilteredItems(items, array) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    var worker = new Worker(items, operation, callback, function (result) {
-        return getFilteredItems(items, result);
-    });
-
-    worker.startWork(Infinity);
+    exports.filterLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -154,11 +150,15 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    var worker = new Worker(items, operation, callback, function (array) {
-        return array;
-    });
+    if (items && items.length !== 0 && limit >= 1) {
+        var worker = new Worker(items, operation, callback, function (result) {
+            return result;
+        });
 
-    worker.startWork(limit);
+        worker.startWork(limit);
+    } else {
+        callback(null, []);
+    }
 };
 
 /**
@@ -170,9 +170,13 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    var worker = new Worker(items, operation, callback, function (result) {
-        return getFilteredItems(items, result);
-    });
+    if (items && items.length !== 0 && limit >= 1) {
+        var worker = new Worker(items, operation, callback, function (result) {
+            return getFilteredItems(items, result);
+        });
 
-    worker.startWork(limit);
+        worker.startWork(limit);
+    } else {
+        callback(null, []);
+    }
 };
