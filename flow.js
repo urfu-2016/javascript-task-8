@@ -55,7 +55,7 @@ var parallel = function (operations, limit, callback) {
                 nextOperation(next(processId++));
             }
             if (completedProcess === length) {
-                callback(null, result);
+                callback(error, result);
             }
         };
     };
