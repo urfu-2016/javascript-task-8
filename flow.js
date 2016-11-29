@@ -76,41 +76,6 @@ exports.makeAsync = function (func) {
 };
 
 /**
- * Паралельное выполнение операций
- * @param {Function[]} functions – функции для параллельного рассчета
- * @param {Number} limit – максимальное количество выполняемых параллельно операций
- * @param {Function} callback
- */
-var parallel = function (functions, limit, callback) {
-    var count = functions.length;
-    var resultData = [];
-    var errCb = false;
-    var limitArray = functions.splice(limit);
-    var funcNum = 0;
-    var cb = function (num) {
-        return function (err, data) {
-            count--;
-            if (err && !errCb) {
-                callback(err);
-                errCb = true;
-            } else {
-                resultData[num] = data;
-                var nextFunction = limitArray.shift();
-                if (nextFunction) {
-                    nextFunction(cb(funcNum++));
-                }
-            }
-            if (count === 0) {
-                callback(null, resultData);
-            }
-        };
-    };
-    functions.forEach(function (operation) {
-        operation(cb(funcNum++));
-    });
-};
-
-/**
  * Параллельная обработка элементов с ограничением
  * @star
  * @param {Array} items – элементы для итерации
@@ -124,12 +89,36 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
         return;
     }
-    var functions = items.map(function (item) {
-        return function (cb) {
-            operation(item, cb);
-        };
+    var itemsCopy = items.slice();
+    var count = limit === Infinity ? items.length : limit;
+    var resultData = [];
+    var errCb = false;
+    var limitItems = itemsCopy.splice(0, limit);
+    var funcNum = 0;
+    var cb = function (err, data) {
+        count--;
+        if (err && !errCb) {
+            callback(err);
+            errCb = true;
+        } else {
+            resultData[funcNum] = data;
+            funcNum++;
+            limitItems.shift();
+            if (limitItems.length === 0 && itemsCopy.length !== 0) {
+                limitItems = itemsCopy.splice(0, limit);
+                limitItems.forEach(function (item) {
+                    operation(item, cb);
+                });
+            }
+        }
+        if (count === 0) {
+            callback(null, resultData);
+        }
+    };
+    limitItems.forEach(function (item) {
+        operation(item, cb);
     });
-    parallel(functions, limit, callback);
+
 };
 
 /**
