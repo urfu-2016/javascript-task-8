@@ -14,7 +14,7 @@ exports.isStar = true;
 exports.serial = function (operations, callback) {
     var length = operations.length;
     if (!length) {
-        callback(null, null);
+        callback(new SyntaxError('\'operations\' must not be empty'));
 
         return;
     }
@@ -41,19 +41,18 @@ var parallel = function (operations, limit, callback) {
     var result = [];
     var processId = 0;
     var completedProcess = 0;
-    var failProcess = false;
+    var error = null;
     var next = function (id) {
         return function (err, data) {
-            if (err && !failProcess) {
-                failProcess = true;
-                callback(err);
+            if (err) {
+                error = error || err;
             } else {
                 result[id] = data;
-                completedProcess++;
-                var nextOperation = nextOperations.shift();
-                if (nextOperation) {
-                    nextOperation(next(processId++));
-                }
+            }
+            completedProcess++;
+            var nextOperation = nextOperations.shift();
+            if (nextOperation) {
+                nextOperation(next(processId++));
             }
             if (completedProcess === length) {
                 callback(null, result);
