@@ -123,8 +123,8 @@ exports.filter = function (items, operation, callback) {
  */
 exports.makeAsync = function (func) {
     return function () {
-        var callback = arguments[arguments.length - 1];
-        var args = [].slice.call(arguments, 0, arguments.length - 1);
+        var args = [].slice.call(arguments, 0);
+        var callback = args.pop();
 
         setTimeout(function () {
             var error = null;
