@@ -18,7 +18,7 @@ Iterator.prototype.next = function () {
 };
 
 Iterator.prototype.hasAny = function () {
-    return this.nextIndex === this.array.length;
+    return this.nextIndex !== this.array.length;
 };
 
 /**
@@ -27,14 +27,13 @@ Iterator.prototype.hasAny = function () {
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    var currentIndex = 0;
-    operations = operations || [];
+    var operationsIterator = new Iterator(operations || []);
 
     (function internalCallback(error, data) {
-        if (currentIndex >= operations.length || error) {
+        if (!operationsIterator.hasAny() || error) {
             callback(error, error ? undefined : data);
         } else {
-            operations[currentIndex++](data || internalCallback, internalCallback);
+            operationsIterator.next().value(data || internalCallback, internalCallback);
         }
     }());
 };
@@ -106,13 +105,13 @@ exports.mapLimit = function (items, limit, operation, callback) {
             }
         }
 
-        while (activeWorkersCount < limit && !itemsIterator.hasAny()) {
+        while (activeWorkersCount < limit && itemsIterator.hasAny()) {
             var nextItem = itemsIterator.next();
             operation(nextItem.value, internalCallback.bind(null, nextItem.index));
             activeWorkersCount++;
         }
 
-        if (itemsIterator.hasAny() && !activeWorkersCount) {
+        if (!itemsIterator.hasAny() && !activeWorkersCount) {
             callback(null, result);
         }
     }());
