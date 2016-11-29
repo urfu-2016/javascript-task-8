@@ -14,7 +14,7 @@ exports.isStar = true;
 exports.serial = function (operations, callback) {
     var length = operations.length;
     if (!length) {
-        callback(new SyntaxError('\'operations\' must not be empty'));
+        callback(null);
 
         return;
     }
