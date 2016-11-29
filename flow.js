@@ -51,8 +51,12 @@ var parallel = function (operations, limit, callback) {
             }
             completedProcess++;
             var nextOperation = nextOperations.shift();
-            if (nextOperation && !error) {
-                nextOperation(next(processId++));
+            if (nextOperation) {
+                if (error) {
+                    completedProcess++;
+                } else {
+                    nextOperation(next(processId++));
+                }
             }
             if (completedProcess === length) {
                 callback(error, result);
