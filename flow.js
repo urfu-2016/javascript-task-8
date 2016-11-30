@@ -38,6 +38,10 @@ exports.serial = function (operations, callback) {
 
 exports.map = function (items, operation, callback) {
     // console.info(items, operation, callback);
+
+    if (items.length === 0) {
+        callback(null, []);
+    }
     var countErrors = 0;
     var countSrart = items.length;
     var countEnd = 0;
