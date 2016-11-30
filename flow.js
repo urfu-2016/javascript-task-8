@@ -107,7 +107,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             }
 
             var _operation = operationsBeyondLimit.shift();
-            if (_operation) {
+            if (_operation && !isError) {
                 _operation(myCallback.bind(null, operationIndex));
                 operationIndex++;
             }
@@ -131,7 +131,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 exports.filterLimit = function (items, limit, operation, callback) {
     exports.mapLimit(items, limit, operation, function (error, data) {
         if (error) {
-            callback(error);
+            callback(error, null);
         } else {
             callback(null, items.filter(function (item, i) {
                 return data[i];
