@@ -97,9 +97,9 @@ exports.filter = function (items, operation, callback) {
 
 function filterResult(items, data) {
     var newResult = [];
-    for (var index = 0; index < items.length; index++) {
-        if (data[index]) {
-            newResult.push(items[index]);
+    for (var index1 = 0; index1 < items.length; index1++) {
+        if (data[index1]) {
+            newResult.push(items[index1]);
         }
     }
 
