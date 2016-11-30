@@ -14,7 +14,7 @@ exports.isStar = false;
  */
 exports.serial = function (operations, callback) {
     if (!operations || operations.length === 0) {
-        callback(null, null);
+        callback(null, []);
     }
     var currentOperationIndex = 0;
     operations[0](interiorCallback);
