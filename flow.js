@@ -102,11 +102,9 @@ exports.mapLimit = function (items, limit, operation, callback) {
         } else {
             resultData[currFuncNumber] = data;
             count++;
-
-        }
-        limitItems.shift();
-        if (limitItems.length === 0 && itemsCopy.length !== 0) {
-            operation(itemsCopy.shift(), cb.bind(null, count));
+            if (count >= limit && itemsCopy.length !== 0) {
+                operation(itemsCopy.shift(), cb.bind(null, currFuncNumber + limit - 1));
+            }
         }
         if (count === items.length) {
             callback(null, resultData);
