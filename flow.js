@@ -35,6 +35,11 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
+    if (!items || !items.length) {
+        callback(null, []);
+
+        return;
+    }
     var result = [];
     var countExited = 0;
     items.forEach(function (item, itemIndex) {
