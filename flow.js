@@ -61,6 +61,7 @@ exports.map = function (items, operation, callback) {
             return callback(null, result);
         }
     };
+
     items.forEach(function (item, index) {
         operation(item, cb.bind(null, index));
     });
