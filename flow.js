@@ -28,7 +28,7 @@ exports.serial = function (operations, callback) {
         }
     }
 
-    if (operations && operations !== 0) {
+    if (operations && operations.length !== 0) {
         operations[operationIndex](innerCallback);
     } else {
         callback(null, null);
