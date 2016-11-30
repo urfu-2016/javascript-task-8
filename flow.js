@@ -94,16 +94,16 @@ exports.map = function (items, operation, callback) {
     exports.mapLimit(items, Infinity, operation, callback);
 };
 
-function getFilteredItems(items, array) {
-    var v = [];
+function getFilteredItems(items, results) {
+    var filteredItems = [];
 
-    for (var i = 0; i < array.length; i++) {
-        if (array[i]) {
-            v.push(items[i]);
+    for (var i = 0; i < results.length; i++) {
+        if (results[i]) {
+            filteredItems.push(items[i]);
         }
     }
 
-    return v;
+    return filteredItems;
 }
 
 /**
@@ -123,8 +123,8 @@ exports.filter = function (items, operation, callback) {
  */
 exports.makeAsync = function (func) {
     return function () {
-        var args = [].slice.call(arguments, 0);
-        var callback = args.pop();
+        var callback = arguments[arguments.length - 1];
+        var args = [].slice.call(arguments, 0, arguments.length - 1);
 
         setTimeout(function () {
             var error = null;
@@ -150,7 +150,7 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    if (items && items.length !== 0 && limit >= 1) {
+    if (items && items.length !== 0) {
         var worker = new Worker(items, operation, callback, function (result) {
             return result;
         });
@@ -170,7 +170,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    if (items && items.length !== 0 && limit >= 1) {
+    if (items && items.length !== 0) {
         var worker = new Worker(items, operation, callback, function (result) {
             return getFilteredItems(items, result);
         });
