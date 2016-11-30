@@ -191,14 +191,18 @@ describe('flow', function () {
         });
 
         it('zero limit', function (done) {
+            var isMainCallbackCalled = false;
             flow.mapLimit([0, 1, 2, 3, 4, 5], 0, function (x, callback) {
                 assert(false, 'iteratee should not be called');
                 callback();
             }, function (err, results) {
                 assert.deepEqual(results, []);
-                assert(true, 'should call callback');
+                isMainCallbackCalled = true;
             });
-            setTimeout(done, 25);
+            setTimeout(function () {
+                assert(isMainCallbackCalled, 'should call callback');
+                done();
+            }, 25);
         });
 
         it('limit equal size', function (done) {

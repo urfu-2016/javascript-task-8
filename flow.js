@@ -111,7 +111,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             activeWorkersCount++;
         }
 
-        if (!itemsIterator.hasAny() && !activeWorkersCount) {
+        if (!itemsIterator.hasAny() && !activeWorkersCount || !limit) {
             callback(null, result);
         }
     }());
