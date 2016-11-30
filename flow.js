@@ -51,7 +51,7 @@ exports.map = function (items, operation, callback) {
     function innerCallback(i, error, result) {
         if (error) {
             callback(error);
-            
+
             return;
         }
         results[i] = result;
