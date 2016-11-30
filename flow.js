@@ -42,12 +42,18 @@ exports.map = function (items, operation, callback) {
     if (items.length === 0) {
         callback(null, []);
     }
+    var countErrors = 0;
     var countSrart = items.length;
     var countEnd = 0;
     var result = [countSrart];
     var cb = function (index, err, data) {
         if (err) {
+            countErrors++;
+
             return callback(err);
+        }
+        if (countErrors > 0) {
+            return;
         }
         countEnd++;
         result[index] = data;
