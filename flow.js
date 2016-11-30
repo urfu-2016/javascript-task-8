@@ -8,6 +8,14 @@ exports.isStar = true;
 
 var WORKER_SPAWN_TIMEOUT = 10;
 
+function callOperation(operation, result, callback) {
+    if (operation.length === 2) {
+        operation(result, callback);
+    } else {
+        operation(callback);
+    }
+}
+
 /**
  * Последовательное выполнение операций
  * @param {Function[]} operations – функции для выполнения
@@ -21,7 +29,6 @@ exports.serial = function (operations, callback) {
     }
 
     var currentIndex = 0;
-    var firstOperation = operations[currentIndex];
     var localCallback = function (error, result) {
         if (error) {
             callback(error);
@@ -36,19 +43,10 @@ exports.serial = function (operations, callback) {
             return;
         }
 
-        var nextOperation = operations[currentIndex];
-        if (nextOperation.length === 2) {
-            nextOperation(result, localCallback);
-        } else {
-            nextOperation(localCallback);
-        }
+        callOperation(operations[currentIndex], result, localCallback);
     };
 
-    if (firstOperation.length === 2) {
-        firstOperation(null, localCallback);
-    } else {
-        firstOperation(localCallback);
-    }
+    callOperation(operations[currentIndex], null, localCallback);
 };
 
 /**
@@ -163,10 +161,10 @@ exports.filterLimit = function (items, limit, operation, callback) {
     exports.mapLimit(items, limit, operation, function (error, results) {
         if (error) {
             callback(error);
+        } else {
+            callback(null, items.filter(function (item, index) {
+                return results[index];
+            }));
         }
-
-        callback(null, items.filter(function (item, index) {
-            return results[index];
-        }));
     });
 };
