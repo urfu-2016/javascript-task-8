@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = true;
+exports.isStar = false;
 
 /**
  * Последовательное выполнение операций
@@ -96,14 +96,16 @@ exports.mapLimit = function (items, limit, operation, callback) {
     }
 
     function finishWork(index, err, data) {
-        if (err) {
-            callback(err);
+        if (err && !hasErrorOccurred) {
             hasErrorOccurred = true;
-        } else if (!hasErrorOccurred) {
-            result[index] = data;
-            workersCount--;
-            tryAddWorkers();
+            callback(err);
+
+            return;
         }
+
+        result[index] = data;
+        workersCount--;
+        tryAddWorkers();
     }
 };
 
