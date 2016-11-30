@@ -49,7 +49,7 @@ exports.map = function (items, operation, callback) {
     var resultCount = 0;
 
     items.forEach(function (item, i) {
-       operation(item, innerCallback.bind(null, i));
+        operation(item, innerCallback.bind(null, i));
     });
 
     function innerCallback(index, err, data) {
@@ -104,6 +104,7 @@ exports.filter = function (items, operation, callback) {
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns
  */
 exports.makeAsync = function (func) {
     return function () {
@@ -115,7 +116,7 @@ exports.makeAsync = function (func) {
                 callback(err);
             }
         }, 0, [].slice.call(arguments));
-    }
+    };
 };
 
 /**
