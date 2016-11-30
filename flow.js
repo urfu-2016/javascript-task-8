@@ -75,6 +75,8 @@ exports.filter = function (items, operation, callback) {
     this.map(items, operation, function (err, data) {
         if (err) {
             callback(err);
+
+            return;
         }
         filteredItems = items.filter(function (item, index) {
             return data[index];
