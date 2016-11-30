@@ -48,10 +48,6 @@ function serial(operations, callback) {
 
 function myMap(items, operation, callback) {
     if (items.length === 0) {
-        operation(function (err, data) {
-            callback(err, data);
-        });
-
         return;
     }
     var resultArray = [];
