@@ -14,7 +14,7 @@ exports.isStar = false;
  */
 exports.serial = function (operations, callback) {
     if (!operations || operations.length === 0) {
-        callback(null, []);
+        callback(null, null);
     }
     var currentOperationIndex = 0;
     operations[0](interiorCallback);
@@ -38,6 +38,11 @@ exports.map = function (items, operation, callback) {
     var completedFunctionCount = 0;
     var errorCount = 0;
     var result = [];
+    if (items.length === 0) {
+        callback(null, []);
+
+        return;
+    }
     items.forEach(function (item, index) {
         operation(item, function (opIndex, err, data) {
             if (err) {
@@ -72,27 +77,6 @@ exports.filter = function (items, operation, callback) {
         });
         callback(null, filteredItems);
     });
-    // var completedFunctionCount = 0;
-    // var result = [];
-    // var timer = setInterval(function () {
-    //     if (completedFunctionCount === items.length) {
-    //         clearInterval(timer);
-    //         result = items.filter(function (item, index) {
-    //             return result[index] === true;
-    //         });
-    //         callback(null, result);
-    //     }
-    // }, 0);
-    // items.forEach(function (item) {
-    //     operation(item, function (err, data) {
-    //         if (err) {
-    //             clearInterval(timer);
-    //             callback(err);
-    //         } else {
-    //             result[completedFunctionCount++] = data;
-    //         }
-    //     });
-    // });
 };
 
 /**
