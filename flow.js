@@ -26,7 +26,9 @@ exports.serial = function (operations, callback) {
         }
     }
 
-    operations.shift()(next);
+    if (operations.length > 0) {
+        operations.shift()(next);
+    }
 };
 
 /**
