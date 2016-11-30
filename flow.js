@@ -35,11 +35,9 @@ exports.serial = function (operations, callback) {
     }
 };
 
-function Worker(items, operation, callback, convert) {
-    this.items = items;
-    this.operation = operation;
+function Worker(tasks, callback) {
+    this.tasks = tasks;
     this.callback = callback;
-    this.convert = convert;
 
     this.results = [];
     this.countOfProcessedItems = 0;
@@ -47,10 +45,10 @@ function Worker(items, operation, callback, convert) {
     this.finished = false;
 }
 
-Worker.prototype.parallelize = function (itemIndex) {
+Worker.prototype.parallelize = function (taskIndex) {
     var _this = this;
-    this.operation(this.items[itemIndex], function (err, data) {
-        _this.recursiveСallback(err, data, itemIndex);
+    this.tasks[taskIndex](function (err, data) {
+        _this.recursiveСallback(err, data, taskIndex);
     });
 };
 
@@ -61,7 +59,7 @@ Worker.prototype.recursiveСallback = function (err, data, resultIndex) {
     }
 
     if (!this.finished) {
-        if (this.i < this.items.length) {
+        if (this.i < this.tasks.length) {
             this.parallelize(this.i);
             this.i++;
         }
@@ -69,15 +67,15 @@ Worker.prototype.recursiveСallback = function (err, data, resultIndex) {
         this.results[resultIndex] = data;
         this.countOfProcessedItems++;
 
-        if (this.countOfProcessedItems === this.items.length) {
+        if (this.countOfProcessedItems === this.tasks.length) {
             this.finished = true;
-            this.callback(null, this.convert(this.results));
+            this.callback(null, this.results);
         }
     }
 };
 
 Worker.prototype.startWork = function (limit) {
-    for (var i = 0; i < Math.min(limit, this.items.length); i++) {
+    for (var i = 0; i < Math.min(limit, this.tasks.length); i++) {
         this.parallelize(i);
     }
 
@@ -93,18 +91,6 @@ Worker.prototype.startWork = function (limit) {
 exports.map = function (items, operation, callback) {
     exports.mapLimit(items, Infinity, operation, callback);
 };
-
-function getFilteredItems(items, results) {
-    var filteredItems = [];
-
-    for (var i = 0; i < results.length; i++) {
-        if (results[i]) {
-            filteredItems.push(items[i]);
-        }
-    }
-
-    return filteredItems;
-}
 
 /**
  * Параллельная фильтрация элементов
@@ -149,9 +135,11 @@ exports.makeAsync = function (func) {
  */
 exports.mapLimit = function (items, limit, operation, callback) {
     if (items && items.length !== 0) {
-        var worker = new Worker(items, operation, callback, function (result) {
-            return result;
+        var tasks = items.map(function (item) {
+            return operation.bind(null, item);
         });
+
+        var worker = new Worker(tasks, callback);
 
         worker.startWork(limit);
     } else {
@@ -169,8 +157,18 @@ exports.mapLimit = function (items, limit, operation, callback) {
  */
 exports.filterLimit = function (items, limit, operation, callback) {
     if (items && items.length !== 0) {
-        var worker = new Worker(items, operation, callback, function (result) {
-            return getFilteredItems(items, result);
+        var tasks = items.map(function (item) {
+            return operation.bind(null, item);
+        });
+
+        var worker = new Worker(tasks, function (err, data) {
+            if (err) {
+                callback(err);
+            } else {
+                callback(null, items.filter(function (item, index) {
+                    return data[index];
+                }));
+            }
         });
 
         worker.startWork(limit);
