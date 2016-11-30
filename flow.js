@@ -91,6 +91,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
     }
     var itemsCopy = items.slice();
     var count = 0;
+    var limitNum = limit;
     var resultData = [];
     var errCb = false;
     var limitItems = itemsCopy.splice(0, limit);
@@ -103,7 +104,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             resultData[currFuncNumber] = data;
             count++;
             if (count >= limit && itemsCopy.length !== 0) {
-                operation(itemsCopy.shift(), cb.bind(null, currFuncNumber + limit - 1));
+                operation(itemsCopy.shift(), cb.bind(null, limitNum++));
             }
         }
         if (count === items.length) {
