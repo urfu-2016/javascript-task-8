@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = false;
+exports.isStar = true;
 
 /**
  * Последовательное выполнение операций
@@ -83,7 +83,10 @@ function returnItemIfProcessedItem(item, processedItem) {
  */
 exports.makeAsync = function (func) {
     return function (files, next) {
-        next(null, func(files));
+        setTimeout(function () {
+            var temp = func(files);
+            next(null, temp);
+        }, 0);
     };
 };
 
