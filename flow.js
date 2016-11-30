@@ -1,9 +1,5 @@
 'use strict';
 
-/**
- * Сделано задание на звездочку
- * Реализованы методы mapLimit и filterLimit
- */
 exports.isStar = false;
 
 /**
