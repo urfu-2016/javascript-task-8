@@ -74,6 +74,11 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
+    if (items.length === 0) {
+        callback(null, []);
+
+        return;
+    }
     var values = [];
     var hasError = false;
     var activeOperations = 0;
