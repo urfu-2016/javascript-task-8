@@ -51,6 +51,8 @@ exports.map = function (items, operation, callback) {
     function innerCallback(i, error, result) {
         if (error) {
             callback(error);
+            
+            return;
         }
         results[i] = result;
         notFinished[i] = false;
@@ -65,7 +67,6 @@ exports.map = function (items, operation, callback) {
     for (var i = 0; i < items.length; i++) {
         operation(items[i], innerCallback.bind(null, i));
     }
-    console.info(items, operation, callback);
 };
 
 /**
