@@ -30,9 +30,9 @@ exports.serial = function (operations, callback) {
  */
 exports.map = function (items, operation, callback) {
     var values = [];
-    var hasError = false;
     var startedOperations = 0;
     var finishedOperations = 0;
+    var hasError = false;
     var cb = function (index) {
         return function (error, data) {
             if (error || hasError) {
