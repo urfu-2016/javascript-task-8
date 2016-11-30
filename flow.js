@@ -96,18 +96,22 @@ exports.mapLimit = function (items, limit, operation, callback) {
         if (error && !isError) {
             callback(error, data);
             isError = true;
-        } else {
+        }
+
+        if (!error) {
             resultData[index] = data;
+        }
 
-            var _operation = operationsBeyondLimit.shift();
-            if (_operation) {
-                _operation(myCallback.bind(null, operationIndex));
-                operationIndex++;
-            }
+        finishIndex++;
 
-            if (++finishIndex === operationIndex) {
-                callback(error, resultData);
-            }
+        var _operation = operationsBeyondLimit.shift();
+        if (_operation) {
+            _operation(myCallback.bind(null, operationIndex));
+            operationIndex++;
+        }
+
+        if (finishIndex === operationIndex) {
+            callback(error, resultData);
         }
     };
 
