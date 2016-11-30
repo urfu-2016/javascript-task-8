@@ -94,10 +94,12 @@ exports.filter = function (items, operation, callback) {
     console.info(items, operation, callback);
     exports.map(items, operation, function (error, data) {
         if (error) {
-            callback(error);
-        } else {
-            callback(null, filterResult(items, data));
+            callback(error, null);
+
+            return;
         }
+        callback(null, filterResult(items, data));
+
     });
 };
 
