@@ -28,6 +28,8 @@ exports.serial = function (operations, callback) {
 
     if (operations.length > 0) {
         operations.shift()(next);
+    } else {
+        callback(null, null);
     }
 };
 
@@ -40,6 +42,8 @@ exports.serial = function (operations, callback) {
 exports.map = function (items, operation, callback) {
     if (items.length === 0) {
         callback(null, items);
+
+        return;
     }
 
     var result = {
@@ -47,13 +51,7 @@ exports.map = function (items, operation, callback) {
         passedItemsCount: 0
     };
 
-    function operationCallback(error, data) {
-        var args = [].slice.call(arguments);
-        var res = args[0];
-        var index = args[1];
-        error = args[2];
-        data = args[3];
-
+    function operationCallback(res, index, error, data) {
         if (arguments.length === 3) {
             data = error;
             error = undefined;
@@ -61,6 +59,7 @@ exports.map = function (items, operation, callback) {
 
         if (error) {
             callback(error);
+
             return;
         }
 
@@ -92,6 +91,7 @@ exports.map = function (items, operation, callback) {
 exports.filter = function (items, operation, callback) {
     if (items.length === 0) {
         callback(null, items);
+
         return;
     }
 
@@ -109,6 +109,7 @@ exports.filter = function (items, operation, callback) {
 
         if (error) {
             callback(error);
+
             return;
         }
 
