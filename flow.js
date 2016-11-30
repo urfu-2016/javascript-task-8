@@ -1,6 +1,10 @@
 'use strict';
 
-exports.isStar = false;
+/**
+ * Сделано задание на звездочку
+ * Реализованы методы mapLimit и filterLimit
+ */
+exports.isStar = true;
 
 /**
  * Последовательное выполнение операций
@@ -29,36 +33,7 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    var values = [];
-    var startedOperations = 0;
-    var finishedOperations = 0;
-    var hasError = false;
-    var cb = function (index) {
-        return function (error, data) {
-            if (error || hasError) {
-                if (!hasError) {
-                    hasError = true;
-                    callback(error);
-                }
-            } else {
-                values[index] = data;
-                finishedOperations++;
-                if (finishedOperations === items.length) {
-                    callback(null, values);
-                }
-            }
-        };
-    };
-    var launchOperations = function () {
-        while (startedOperations < items.length) {
-            operation(items[startedOperations], cb(startedOperations));
-            startedOperations++;
-        }
-        if (finishedOperations < items.length) {
-            setTimeout(launchOperations, 0);
-        }
-    };
-    launchOperations();
+    exports.mapLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -68,16 +43,7 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    exports.map(items, operation, function (error, data) {
-        if (error) {
-            callback(error);
-        } else {
-            var filteredItems = items.filter(function (item, index) {
-                return data[index];
-            });
-            callback(null, filteredItems);
-        }
-    });
+    exports.filterLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -92,7 +58,7 @@ exports.makeAsync = function (func) {
         setTimeout(function () {
             try {
                 callback(null, func.apply(null, args));
-            } catch (error) {
+            } catch(error) {
                 callback(error);
             }
         }, 0);
@@ -108,7 +74,39 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция mapLimit не реализована'));
+    var values = [];
+    var hasError = false;
+    var activeOperations = 0;
+    var startedOperations = 0;
+    var finishedOperations = 0;
+    var cb = function(index) {
+        return function (error, data) {
+            if (error || hasError) {
+                if (!hasError) {
+                    hasError = true;
+                    callback(error);
+                }
+            } else {
+                values[index] = data;
+                finishedOperations++;
+                activeOperations--;
+                if (finishedOperations === items.length) {
+                    callback(null, values);
+                }
+            }
+        }
+    };
+    var launchOperations = function () {
+        while(startedOperations < items.length && activeOperations < limit) {
+            operation(items[startedOperations], cb(startedOperations));
+            startedOperations++;
+            activeOperations++;
+        }
+        if (finishedOperations < items.length) {
+            setTimeout(launchOperations, 0);
+        }
+    };
+    launchOperations();
 };
 
 /**
@@ -120,5 +118,14 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция filterLimit не реализована'));
+    exports.mapLimit(items, limit, operation, function (error, data) {
+        if (error) {
+            callback(error);
+        } else {
+            var filteredItems = items.filter(function (item, index) {
+                return data[index];
+            });
+            callback(null, filteredItems);
+        }
+    });
 };
