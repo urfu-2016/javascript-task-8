@@ -53,18 +53,20 @@ function runAsyncFunctions(items, operation, callback, rule) {
     var endedOperations = 0;
     var result = [];
     items.forEach(function (item) {
-        operation(item, function (err, data) {
-            if (err) {
-                callback(err, result);
+        setTimeout(function () {
+            operation(item, function (err, data) {
+                if (err) {
+                    callback(err, result);
 
-                return;
-            }
-            endedOperations++;
-            result = result.concat(rule(item, data));
-            if (endedOperations === items.length) {
-                callback(null, result);
-            }
-        });
+                    return;
+                }
+                endedOperations++;
+                result = result.concat(rule(item, data));
+                if (endedOperations === items.length) {
+                    callback(null, result);
+                }
+            });
+        }, 0);
     });
 }
 
@@ -132,19 +134,21 @@ function runAsyncLimitFunctions(items, limit, operation, callback) {
     }
 
     function runOperation(element) {
-        operation(element, function (err, data) {
-            if (err) {
-                callback(err, data);
+        setTimeout(function () {
+            operation(element, function (err, data) {
+                if (err) {
+                    callback(err, data);
 
-                return;
-            }
-            result = result.concat(currentFunction(element, data));
-            launchedOperations--;
-            endedOperations++;
-            launchMoreOperations();
-            if (endedOperations === items.length) {
-                callback(null, result);
-            }
-        });
+                    return;
+                }
+                result = result.concat(currentFunction(element, data));
+                launchedOperations--;
+                endedOperations++;
+                launchMoreOperations();
+                if (endedOperations === items.length) {
+                    callback(null, result);
+                }
+            });
+        }, 0);
     }
 }
