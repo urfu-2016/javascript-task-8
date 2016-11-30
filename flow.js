@@ -145,7 +145,7 @@ exports.makeAsync = function (func) {
     return function () {
 
         return setTimeout(function (args) {
-            args = [].slice.c+all(args);
+            args = [].slice.call(args);
             var callback = args.pop();
             var error = null;
             var result = null;
