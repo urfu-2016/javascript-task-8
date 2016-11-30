@@ -28,10 +28,10 @@ exports.serial = function (operations, callback) {
     operations[0](next);
 };
 
-function fillNoVisited(count) {
+function fillNoVisited(count, bool) {
     var isNoVisited = [];
     for (var index = 0; index < count; index++) {
-        isNoVisited[index] = true;
+        isNoVisited[index] = bool;
     }
 
     return isNoVisited;
@@ -48,19 +48,29 @@ exports.map = function (items, operation, callback) {
         callback(null, []);
     }
 
-    var isNoVisited = fillNoVisited(items.length);
+    var isNoVisited = fillNoVisited(items.length, true);
     var result = [];
+    var errors = fillNoVisited(items.length, false);
 
     items.forEach(function (element, index) {
         operation(element, function (error, data) {
             if (error) {
                 callback(error, []);
             } else {
-                result[index] = data;
                 isNoVisited[index] = false;
+                if (isAll(errors)) {
+                    return;
+                }
+                if (error) {
+                    errors[index] = true;
+                    callback(error);
+                }
+                result[index] = data;
+
                 if (isAll(isNoVisited)) {
                     return;
                 }
+
                 callback(null, result);
             }
         });
