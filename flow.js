@@ -79,12 +79,10 @@ exports.map = function (items, operation, callback) {
         }
     }
 
-    items
-        .forEach(function (item, index) {
-            if (!errorOccurred) {
-                operation(item, operationCallback.bind(null, result, index));
-            }
-        });
+    for (var i = 0; i < items.length && !errorOccurred; i++) {
+        operation(items[i], operationCallback.bind(null, result, i));
+    }
+
 };
 
 /**
