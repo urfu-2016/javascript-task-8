@@ -90,33 +90,30 @@ exports.mapLimit = function (items, limit, operation, callback) {
         return;
     }
     var itemsCopy = items.slice();
-    var count = items.length;
+    var count = 0;
     var resultData = [];
     var errCb = false;
     var limitItems = itemsCopy.splice(0, limit);
-    var funcNum = 0;
-    var cb = function (err, data) {
-        count--;
+    var cb = function (currFuncNumber, err, data) {
+
         if (err && !errCb) {
             callback(err);
             errCb = true;
         } else {
-            resultData[funcNum] = data;
-            funcNum++;
+            resultData[currFuncNumber] = data;
+            count++;
+
         }
         limitItems.shift();
         if (limitItems.length === 0 && itemsCopy.length !== 0) {
-            limitItems = itemsCopy.splice(0, limit);
-            limitItems.forEach(function (item) {
-                operation(item, cb);
-            });
+            operation(itemsCopy.shift(), cb.bind(null, count));
         }
-        if (count === 0) {
+        if (count === items.length) {
             callback(null, resultData);
         }
     };
-    limitItems.forEach(function (item) {
-        operation(item, cb);
+    limitItems.forEach(function (item, index) {
+        operation(item, cb.bind(null, index));
     });
 };
 
