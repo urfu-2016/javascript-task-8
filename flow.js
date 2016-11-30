@@ -15,18 +15,18 @@ exports.serial = function (operations, callback) {
     // console.info(operations, callback);
     if (!operations || operations.length === 0) {
         callback(null, null);
+    } else {
+        var index = 0;
+        var cb = function (err, data) {
+            index++;
+            if (err || index === operations.length) {
+                callback(err, data);
+            } else {
+                operations[index](data, cb);
+            }
+        };
+        operations[index](cb);
     }
-    var index = 0;
-    var cb = function (err, data) {
-        index++;
-        if (err || index === operations.length) {
-            callback(err, data);
-        } else {
-            operations[index](data, cb);
-        }
-    };
-    operations[index](cb);
-
 };
 
 /**
@@ -40,7 +40,7 @@ exports.map = function (items, operation, callback) {
     // console.info(items, operation, callback);
 
     if (items.length === 0) {
-        callback(null, []);
+        callback(null, null);
     }
 
     var countErrors = 0;
@@ -84,7 +84,6 @@ exports.filter = function (items, operation, callback) {
                 return data[index];
             }));
         }
-
     });
 };
 
@@ -98,13 +97,12 @@ exports.makeAsync = function (func) {
     // console.info(func);
     return function () {
         var args = [].slice.call(arguments);
-        var callback = args.pop();
+        var cb = args.pop();
         setTimeout(function () {
             try {
-                callback(null, func.apply(null, args));
+                cb(null, func.apply(null, args));
             } catch (e) {
-                console.info(e);
-                callback(e);
+                cb(e);
             }
         }, 0);
     };
