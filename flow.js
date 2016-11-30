@@ -32,10 +32,9 @@ exports.serial = function (operations, callback) {
  * @param {Array} items – элементы для итерации
  * @param {Function} operation – функция для обработки элементов
  * @param {Function} callback
- * @returns {Array} - обработанные элементы
  */
 exports.map = function (items, operation, callback) {
-    return exports.mapLimit(items, Infinity, operation, callback);
+    exports.mapLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -43,10 +42,9 @@ exports.map = function (items, operation, callback) {
  * @param {Array} items – элементы для фильтрация
  * @param {Function} operation – функция фильтрации элементов
  * @param {Function} callback
- * @returns {Array} - отфильтрованные элементы
  */
 exports.filter = function (items, operation, callback) {
-    return exports.filterLimit(items, Infinity, operation, callback);
+    exports.filterLimit(items, Infinity, operation, callback);
 };
 
 
