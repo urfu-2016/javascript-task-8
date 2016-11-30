@@ -13,7 +13,7 @@ exports.isStar = false;
  */
 exports.serial = function (operations, callback) {
     // console.info(operations, callback);
-    if (operations.length === 0) {
+    if (!operations || operations.length === 0) {
         callback(null, []);
     }
     var index = 0;
@@ -42,18 +42,12 @@ exports.map = function (items, operation, callback) {
     if (items.length === 0) {
         callback(null, []);
     }
-    var countErrors = 0;
     var countSrart = items.length;
     var countEnd = 0;
     var result = [countSrart];
     var cb = function (index, err, data) {
         if (err) {
-            countErrors++;
-
             return callback(err);
-        }
-        if (countErrors > 0) {
-            return;
         }
         countEnd++;
         result[index] = data;
