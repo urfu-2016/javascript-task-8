@@ -104,7 +104,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             resultData[funcNum] = data;
             funcNum++;
             limitItems.shift();
-            if (limitItems.length === 0 && itemsCopy.length !== 0 && count !== 0) {
+            if (limitItems.length === 0 && itemsCopy.length !== 0) {
                 limitItems = itemsCopy.splice(0, limit);
                 limitItems.forEach(function (item) {
                     operation(item, cb);
@@ -118,7 +118,6 @@ exports.mapLimit = function (items, limit, operation, callback) {
     limitItems.forEach(function (item) {
         operation(item, cb);
     });
-
 };
 
 /**
