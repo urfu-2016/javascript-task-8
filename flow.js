@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = false;
+exports.isStar = true;
 
 /**
  * Последовательное выполнение операций
@@ -21,7 +21,7 @@ exports.serial = function (operations, callback) {
             operations[currentOperationIndex++](data, next);
         }
     }
-    if (operations || operations.length !== 0) {
+    if (operations && operations.length !== 0) {
         operations[currentOperationIndex++](next);
     } else {
         callback(null, null);
