@@ -6,13 +6,47 @@
  */
 exports.isStar = true;
 
+var WORKER_SPAWN_TIMEOUT = 10;
+
+function callOperation(operation, result, callback) {
+    if (operation.length === 2) {
+        operation(result, callback);
+    } else {
+        operation(callback);
+    }
+}
+
 /**
  * Последовательное выполнение операций
  * @param {Function[]} operations – функции для выполнения
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    console.info(operations, callback);
+    if (operations.length === 0) {
+        callback(null, null);
+
+        return;
+    }
+
+    var currentIndex = 0;
+    var localCallback = function (error, result) {
+        if (error) {
+            callback(error);
+
+            return;
+        }
+
+        currentIndex++;
+        if (currentIndex === operations.length) {
+            callback(error, result);
+
+            return;
+        }
+
+        callOperation(operations[currentIndex], result, localCallback);
+    };
+
+    callOperation(operations[currentIndex], null, localCallback);
 };
 
 /**
@@ -22,7 +56,7 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    exports.mapLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -32,15 +66,33 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    exports.filterLimit(items, Infinity, operation, callback);
 };
 
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
  */
 exports.makeAsync = function (func) {
-    console.info(func);
+    var asyncFunc = function () {
+        setTimeout(function (args) {
+            var callback = args.pop();
+
+            try {
+                callback(null, func.apply(global, args));
+            } catch (error) {
+                callback(error);
+            }
+        }, 0, Array.prototype.slice.call(arguments));
+    };
+
+    Object.defineProperty(asyncFunc, 'length', {
+        value: func.length + 1,
+        'writable': false
+    });
+
+    return asyncFunc;
 };
 
 /**
@@ -52,7 +104,49 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция mapLimit не реализована'));
+    if (items.length === 0) {
+        callback(null, []);
+    }
+
+    var activeWorkersCount = 0;
+    var results = [];
+    var errorHappened = false;
+    var workersStarted = 0;
+    var localCallback = function (index) {
+        return function (error, result) {
+            if (error || errorHappened) {
+                if (!errorHappened) {
+                    errorHappened = true;
+                    callback(error);
+                }
+
+                return;
+            }
+
+            results[index] = result;
+            activeWorkersCount--;
+            if (activeWorkersCount === 0 && workersStarted === items.length) {
+                callback(null, results);
+            }
+        };
+    };
+    var addWorkers = function () {
+        if (errorHappened) {
+            return;
+        }
+
+        while (activeWorkersCount < limit && workersStarted < items.length) {
+            operation(items[workersStarted], localCallback(workersStarted));
+            activeWorkersCount++;
+            workersStarted++;
+        }
+
+        if (workersStarted < items.length) {
+            setTimeout(addWorkers, WORKER_SPAWN_TIMEOUT);
+        }
+    };
+
+    addWorkers();
 };
 
 /**
@@ -64,5 +158,13 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция filterLimit не реализована'));
+    exports.mapLimit(items, limit, operation, function (error, results) {
+        if (error) {
+            callback(error);
+        } else {
+            callback(null, items.filter(function (item, index) {
+                return results[index];
+            }));
+        }
+    });
 };
