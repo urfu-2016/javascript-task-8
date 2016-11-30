@@ -47,6 +47,7 @@ exports.map = function (items, operation, callback) {
     }
     var result = [];
     var resultCount = 0;
+    var errorExist = false;
 
     items.forEach(function (item, i) {
         operation(item, innerCallback.bind(null, i));
@@ -54,15 +55,14 @@ exports.map = function (items, operation, callback) {
 
     function innerCallback(index, err, data) {
         resultCount++;
-        if (err) {
+        if (err && !errorExist) {
             callback(err);
-
-            return;
-        }
-
-        result[index] = data;
-        if (resultCount === items.length) {
-            callback(null, result);
+            errorExist = true;
+        } else {
+            result[index] = data;
+            if (resultCount === items.length) {
+                callback(null, result);
+            }
         }
     }
 };
