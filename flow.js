@@ -98,7 +98,7 @@ function myFilter(items, operation, callback) {
 exports.serial = function (operations, callback) {
     console.info('serial');
     console.info(operations, callback);
-    if (operations.length > 0) {
+    if (operations && operations.length > 0) {
         serial(operations, callback);
     } else {
         callback(null, null);
