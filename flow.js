@@ -78,6 +78,8 @@ exports.filter = function (items, operation, callback) {
     exports.map(items, operation, function (err, data) {
         if (err) {
             callback(err);
+
+            return;
         }
 
         callback(null, items.filter(function (item, index) {
