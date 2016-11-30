@@ -40,8 +40,10 @@ exports.serial = function (operations, callback) {
 exports.map = function (items, operation, callback) {
     var results = [];
     var notFinished = [];
+    var errors = [];
     for (var k = 0; k < items.length; k++) {
         notFinished[k] = true;
+        errors[k] = false;
     }
 
     if (items.length === 0) {
@@ -49,15 +51,21 @@ exports.map = function (items, operation, callback) {
     }
 
     function innerCallback(i, error, result) {
-        if (error) {
-            callback(error);
+        notFinished[i] = false;
+        for (var l = 0; l < errors.length; l++) {
+            if (errors[l]) {
 
-            return;
+                return;
+            }
+        }
+        if (error) {
+            errors[i] = true;
+            callback(error);
         }
         results[i] = result;
-        notFinished[i] = false;
         for (var l = 0; l < notFinished.length; l++) {
             if (notFinished[l]) {
+
                 return;
             }
         }
