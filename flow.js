@@ -54,25 +54,21 @@ exports.map = function (items, operation, callback) {
 
     items.forEach(function (element, index) {
         operation(element, function (error, data) {
-            if (error) {
-                callback(error, []);
-            } else {
-                isNoVisited[index] = false;
-                if (isAll(errors)) {
-                    return;
-                }
-                if (error) {
-                    errors[index] = true;
-                    callback(error);
-                }
-                result[index] = data;
-
-                if (isAll(isNoVisited)) {
-                    return;
-                }
-
-                callback(null, result);
+            isNoVisited[index] = false;
+            if (isAll(errors)) {
+                return;
             }
+            if (error) {
+                errors[index] = true;
+                callback(error);
+            }
+            result[index] = data;
+
+            if (isAll(isNoVisited)) {
+                return;
+            }
+
+            callback(null, result);
         });
     });
 };
