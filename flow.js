@@ -42,17 +42,18 @@ exports.map = function (items, operation, callback) {
     }
     var result = [];
     var countExited = 0;
+    var errorFlag = false;
     items.forEach(function (item, itemIndex) {
         operation(item, function (error, data) {
-            if (error) {
+            if (error && !errorFlag) {
                 callback(error);
-
-                return;
-            }
-            countExited++;
-            result[itemIndex] = data;
-            if (countExited === items.length) {
-                callback(null, result);
+                errorFlag = true;
+            } else {
+                countExited++;
+                result[itemIndex] = data;
+                if (countExited === items.length) {
+                    callback(null, result);
+                }
             }
         });
     });
