@@ -52,8 +52,8 @@ exports.map = function (items, operation, callback) {
 
     function innerCallback(i, error, result) {
         notFinished[i] = false;
-        for (var l = 0; l < errors.length; l++) {
-            if (errors[l]) {
+        for (var j = 0; j < errors.length; j++) {
+            if (errors[j]) {
 
                 return;
             }
