@@ -29,11 +29,12 @@ function serial(operations, callback) {
     var nextFunc = function (err, data) {
         if (err) {
             callback(err);
-        } else {
-            nextData = data;
-            index++;
-            nextOperation();
+
+            return;
         }
+        nextData = data;
+        index++;
+        nextOperation();
     };
     operations[index](nextFunc);
     function nextOperation() {
@@ -47,6 +48,7 @@ function serial(operations, callback) {
 
 function myMap(items, operation, callback) {
     if (items.length === 0) {
+        callback(null, []);
 
         return;
     }
@@ -74,7 +76,7 @@ function myMap(items, operation, callback) {
 
 function myFilter(items, operation, callback) {
     if (items.length === 0) {
-        callback(null, items);
+        callback(null, []);
     }
     myMap(items, operation, function (err, data) {
         if (err) {
@@ -98,6 +100,8 @@ exports.serial = function (operations, callback) {
     console.info(operations, callback);
     if (operations.length > 0) {
         serial(operations, callback);
+    } else {
+        callback(null, null);
     }
 };
 
