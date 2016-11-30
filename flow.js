@@ -70,7 +70,7 @@ exports.map = function (items, operation, callback) {
                     return element;
                 });
 
-            callback(res.array);
+            callback(null, res.array);
         }
     }
 
@@ -120,7 +120,7 @@ exports.filter = function (items, operation, callback) {
                     return element;
                 });
 
-            callback(res.array);
+            callback(null, res.array);
         }
     }
 
