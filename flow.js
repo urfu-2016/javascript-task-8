@@ -78,6 +78,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
     var result = [];
     var itemIndex = 0;
     var workersCount = 0;
+    var hasErrorOccurred = false;
     tryAddWorkers();
 
     function tryAddWorkers() {
@@ -96,12 +97,12 @@ exports.mapLimit = function (items, limit, operation, callback) {
     function finishWork(index, err, data) {
         if (err) {
             callback(err);
-
-            return;
+            hasErrorOccurred = true;
+        } else if (!hasErrorOccurred) {
+            result[index] = data;
+            workersCount--;
+            tryAddWorkers();
         }
-        result[index] = data;
-        workersCount--;
-        tryAddWorkers();
     }
 };
 
