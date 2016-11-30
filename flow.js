@@ -135,7 +135,7 @@ exports.filter = function (items, operation, callback) {
     }
 
     for (var i = 0; i < items.length && !errorOccurred; i++) {
-        operation(items[i], operationCallback.bind(null, result, item, i));
+        operation(items[i], operationCallback.bind(null, result, items[i], i));
     }
 };
 
