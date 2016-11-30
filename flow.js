@@ -34,6 +34,7 @@ exports.serial = function (operations, callback) {
  * @param {Function} operation – функция для обработки элементов
  * @param {Function} callback
  */
+
 exports.map = function (items, operation, callback) {
     var completedFunctionCount = 0;
     var errorCount = 0;
