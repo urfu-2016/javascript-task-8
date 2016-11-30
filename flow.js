@@ -14,7 +14,7 @@ exports.isStar = false;
 exports.serial = function (operations, callback) {
 
     if (operations.length === 0) {
-        callback();
+        callback(null, null);
 
         return;
     }
