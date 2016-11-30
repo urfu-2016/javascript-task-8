@@ -62,7 +62,7 @@ function runAsyncFunctions(items, operation, callback, rule) {
             endedOperations++;
             result = result.concat(rule(item, data));
             if (endedOperations === items.length) {
-                callback(undefined, result);
+                callback(null, result);
             }
         });
     });
@@ -83,10 +83,11 @@ function returnItemIfProcessedItem(item, processedItem) {
  */
 exports.makeAsync = function (func) {
     return function (files, next) {
-        files = func(files);
-        next(null, files);
+        next(null, func(files));
     };
 };
+
+var currentFunction;
 
 /**
  * Параллельная обработка элементов с ограничением
@@ -97,34 +98,8 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    var endedOperations = 0;
-    var launchedOperations = 0;
-    var result = [];
-    launchMoreOperations();
-
-    function launchMoreOperations() {
-        while (launchedOperations < limit && items.length > launchedOperations + endedOperations) {
-            var item = items[++launchedOperations + endedOperations - 1];
-            runOperation(item);
-        }
-    }
-
-    function runOperation(element) {
-        operation(element, function (err, data) {
-            if (err) {
-                console.info(err);
-
-                return;
-            }
-            result = result.concat(returnProcessedItem(element, data));
-            launchedOperations--;
-            endedOperations++;
-            launchMoreOperations();
-            if (endedOperations === items.length) {
-                callback(undefined, result);
-            }
-        });
-    }
+    currentFunction = returnProcessedItem;
+    runAsyncLimitFunctions(items, limit, operation, callback);
 };
 
 /**
@@ -136,6 +111,11 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
+    currentFunction = returnItemIfProcessedItem;
+    runAsyncLimitFunctions(items, limit, operation, callback);
+};
+
+function runAsyncLimitFunctions(items, limit, operation, callback) {
     var endedOperations = 0;
     var launchedOperations = 0;
     var result = [];
@@ -151,17 +131,17 @@ exports.filterLimit = function (items, limit, operation, callback) {
     function runOperation(element) {
         operation(element, function (err, data) {
             if (err) {
-                console.info(err);
+                callback(err, data);
 
                 return;
             }
-            result = result.concat(returnItemIfProcessedItem(element, data));
+            result = result.concat(currentFunction(element, data));
             launchedOperations--;
             endedOperations++;
             launchMoreOperations();
             if (endedOperations === items.length) {
-                callback(undefined, result);
+                callback(null, result);
             }
         });
     }
-};
+}
