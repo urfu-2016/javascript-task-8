@@ -47,6 +47,7 @@ exports.map = function (items, operation, callback) {
     items.forEach(function (item, index) {
         operation(item, function (opIndex, err, data) {
             if (err) {
+                errorCount++;
                 callback(err);
 
                 return;
