@@ -48,6 +48,8 @@ exports.map = function (items, operation, callback) {
         operation(item, function (opIndex, err, data) {
             if (err) {
                 callback(err);
+
+                return;
             }
             if (errorCount > 0) {
                 return;
