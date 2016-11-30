@@ -33,9 +33,10 @@ function serial(operations, callback) {
         } else {
             nextData = data;
             index++;
-            setTimeout(nextOperation, 0);
+            nextOperation();
         }
     };
+    operations[index](nextFunc);
     function nextOperation() {
         if (index >= operations.length) {
             callback(null, nextData);
@@ -43,7 +44,6 @@ function serial(operations, callback) {
             operations[index](nextData, nextFunc);
         }
     }
-    operations[index](nextFunc);
 }
 
 function myMap(items, operation, callback) {
@@ -71,6 +71,9 @@ function myMap(items, operation, callback) {
 }
 
 function myFilter(items, operation, callback) {
+    if (items.length === 0) {
+        callback(null, items);
+    }
     myMap(items, operation, function (err, data) {
         if (err) {
             callback(err);
