@@ -51,6 +51,8 @@ exports.map = function (items, operation, callback) {
         passedItemsCount: 0
     };
 
+    var errorOccurred = false;
+
     function operationCallback(res, index, error, data) {
         if (arguments.length === 3) {
             data = error;
@@ -59,6 +61,7 @@ exports.map = function (items, operation, callback) {
 
         if (error) {
             callback(error, data);
+            errorOccurred = true;
 
             return;
         }
@@ -78,7 +81,9 @@ exports.map = function (items, operation, callback) {
 
     items
         .forEach(function (item, index) {
-            operation(item, operationCallback.bind(null, result, index));
+            if (!errorOccurred) {
+                operation(item, operationCallback.bind(null, result, index));
+            }
         });
 };
 
@@ -100,6 +105,8 @@ exports.filter = function (items, operation, callback) {
         passedItemsCount: 0
     };
 
+    var errorOccurred = false;
+
     function operationCallback(res, item, index, error) {
         var data = [].slice.call(arguments)[4];
         if (arguments.length === 4) {
@@ -109,6 +116,7 @@ exports.filter = function (items, operation, callback) {
 
         if (error) {
             callback(error, data);
+            errorOccurred = true;
 
             return;
         }
@@ -132,7 +140,9 @@ exports.filter = function (items, operation, callback) {
 
     items
         .forEach(function (item, index) {
-            operation(item, operationCallback.bind(null, result, item, index));
+            if (!errorOccurred) {
+                operation(item, operationCallback.bind(null, result, item, index));
+            }
         });
 };
 
