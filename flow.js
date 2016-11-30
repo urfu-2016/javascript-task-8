@@ -18,7 +18,7 @@ exports.serial = function (operations, callback) {
             error = undefined;
         }
         if (error) {
-            callback(error);
+            callback(error, data);
         } else if (operations.length > 0) {
             operations.shift()(data, next);
         } else {
@@ -58,7 +58,7 @@ exports.map = function (items, operation, callback) {
         }
 
         if (error) {
-            callback(error);
+            callback(error, data);
 
             return;
         }
@@ -108,7 +108,7 @@ exports.filter = function (items, operation, callback) {
         }
 
         if (error) {
-            callback(error);
+            callback(error, data);
 
             return;
         }
@@ -145,7 +145,7 @@ exports.makeAsync = function (func) {
     return function () {
 
         return setTimeout(function (args) {
-            args = [].slice.call(args);
+            args = [].slice.c+all(args);
             var callback = args.pop();
             var error = null;
             var result = null;
