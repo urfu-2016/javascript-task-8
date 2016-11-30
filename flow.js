@@ -69,9 +69,9 @@ exports.map = function (items, operation, callback) {
         return;
     }
 
-    var operations = items.map(function (item) {
+    var operations = items.map(function (i) {
         return function (cb) {
-            operation(item, cb);
+            operation(i, cb);
         };
     });
 
