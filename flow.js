@@ -20,12 +20,7 @@ exports.serial = function (operations, callback) {
 
             return;
         }
-
-        if (data === undefined) {
-            operations[currentOperationIndex++](myCallback);
-        } else {
-            operations[currentOperationIndex++](data, myCallback);
-        }
+        operations[currentOperationIndex++](data || myCallback, myCallback);
     }());
 };
 
@@ -52,7 +47,7 @@ exports.filter = function (items, operation, callback) {
 function runAsyncFunctions(items, operation, callback, rule) {
     var endedOperations = 0;
     var result = [];
-    items.forEach(function (item) {
+    items.forEach(function (item, index) {
         setTimeout(function () {
             operation(item, function (err, data) {
                 if (err) {
@@ -61,7 +56,10 @@ function runAsyncFunctions(items, operation, callback, rule) {
                     return;
                 }
                 endedOperations++;
-                result = result.concat(rule(item, data));
+                var res;
+                if ((res = rule(item, data))) {
+                    result.splice(index, 0, res);
+                }
                 if (endedOperations === items.length) {
                     callback(null, result);
                 }
@@ -75,7 +73,7 @@ function returnProcessedItem(item, processedItem) {
 }
 
 function returnItemIfProcessedItem(item, processedItem) {
-    return processedItem ? item : [];
+    return processedItem ? item : undefined;
 }
 
 /**
@@ -129,19 +127,22 @@ function runAsyncLimitFunctions(items, limit, operation, callback) {
     function launchMoreOperations() {
         while (launchedOperations < limit && items.length > launchedOperations + endedOperations) {
             var item = items[++launchedOperations + endedOperations - 1];
-            runOperation(item);
+            runOperation(item, launchedOperations + endedOperations);
         }
     }
 
-    function runOperation(element) {
+    function runOperation(item, index) {
         setTimeout(function () {
-            operation(element, function (err, data) {
+            operation(item, function (err, data) {
                 if (err) {
                     callback(err, data);
 
                     return;
                 }
-                result = result.concat(currentFunction(element, data));
+                var res;
+                if ((res = currentFunction(item, data))) {
+                    result.splice(index, 0, res);
+                }
                 launchedOperations--;
                 endedOperations++;
                 launchMoreOperations();
