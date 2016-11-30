@@ -58,7 +58,7 @@ exports.map = function (items, operation, callback) {
             error = undefined;
         }
 
-        if (error) {
+        if (error && !errorOccurred) {
             callback(error, data);
             errorOccurred = true;
 
@@ -78,7 +78,7 @@ exports.map = function (items, operation, callback) {
         }
     }
 
-    for (var i = 0; i < items.length && !errorOccurred; i++) {
+    for (var i = 0; i < items.length; i++) {
         operation(items[i], operationCallback.bind(null, result, i));
     }
 
@@ -110,7 +110,7 @@ exports.filter = function (items, operation, callback) {
             error = undefined;
         }
 
-        if (error) {
+        if (error && !errorOccurred) {
             callback(error, data);
             errorOccurred = true;
 
@@ -134,7 +134,7 @@ exports.filter = function (items, operation, callback) {
         }
     }
 
-    for (var i = 0; i < items.length && !errorOccurred; i++) {
+    for (var i = 0; i < items.length; i++) {
         operation(items[i], operationCallback.bind(null, result, items[i], i));
     }
 };
