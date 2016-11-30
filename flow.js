@@ -42,18 +42,19 @@ exports.map = function (items, operation, callback) {
     if (items.length === 0) {
         callback(null, []);
     }
+
     var countErrors = 0;
     var countSrart = items.length;
     var countEnd = 0;
     var result = [countSrart];
     var cb = function (index, err, data) {
+        if (countErrors > 0) {
+            return;
+        }
         if (err) {
             countErrors++;
 
             return callback(err);
-        }
-        if (countErrors > 0) {
-            return;
         }
         countEnd++;
         result[index] = data;
@@ -78,13 +79,12 @@ exports.filter = function (items, operation, callback) {
     exports.map(items, operation, function (err, data) {
         if (err) {
             callback(err);
-
-            return;
+        } else {
+            callback(null, items.filter(function (item, index) {
+                return data[index];
+            }));
         }
 
-        callback(null, items.filter(function (item, index) {
-            return data[index];
-        }));
     });
 };
 
