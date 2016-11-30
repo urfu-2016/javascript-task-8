@@ -37,7 +37,7 @@ exports.map = function (items, operation, callback) {
     var hasError = false;
     var startedOperations = 0;
     var finishedOperations = 0;
-    var cb = function(index) {
+    var cb = function (index) {
         return function (error, data) {
             if (error || hasError) {
                 if (!hasError) {
@@ -51,10 +51,10 @@ exports.map = function (items, operation, callback) {
                     callback(null, values);
                 }
             }
-        }
+        };
     };
     var launchOperations = function () {
-        while(startedOperations < items.length) {
+        while (startedOperations < items.length) {
             operation(items[startedOperations], cb(startedOperations));
             startedOperations++;
         }
@@ -96,7 +96,7 @@ exports.makeAsync = function (func) {
         setTimeout(function () {
             try {
                 callback(null, func.apply(null, args));
-            } catch(error) {
+            } catch (error) {
                 callback(error);
             }
         }, 0);
