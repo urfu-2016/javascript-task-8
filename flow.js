@@ -17,7 +17,6 @@ function makeAsync(func) {
                 res = func.apply(null, args);
             } catch (err) {
                 error = err;
-                callback(err);
             }
             callback(error, res);
         }, 0, [].slice.call(arguments));
@@ -48,6 +47,7 @@ function serial(operations, callback) {
 
 function myMap(items, operation, callback) {
     if (items.length === 0) {
+
         return;
     }
     var resultArray = [];
@@ -58,12 +58,14 @@ function myMap(items, operation, callback) {
             if (!returnedError) {
                 if (err) {
                     returnedError = err;
-                } else {
-                    resultArray[index] = data;
-                    handleItemsCount++;
+                    callback(err);
+
+                    return;
                 }
+                resultArray[index] = data;
+                handleItemsCount++;
             }
-            if (handleItemsCount === items.length || returnedError) {
+            if (handleItemsCount === items.length) {
                 callback(returnedError, resultArray);
             }
         });
