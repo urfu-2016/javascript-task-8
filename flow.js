@@ -61,6 +61,7 @@ exports.map = function (items, operation, callback) {
 
         if (error) {
             callback(error);
+            return;
         }
 
         res.array[index] = data;
@@ -91,6 +92,7 @@ exports.map = function (items, operation, callback) {
 exports.filter = function (items, operation, callback) {
     if (items.length === 0) {
         callback(null, items);
+        return;
     }
 
     var result = {
@@ -107,6 +109,7 @@ exports.filter = function (items, operation, callback) {
 
         if (error) {
             callback(error);
+            return;
         }
 
         if (data) {
