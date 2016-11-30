@@ -66,9 +66,9 @@ function myMap(items, operation, callback) {
                 }
                 resultArray[index] = data;
                 handleItemsCount++;
-            }
-            if (handleItemsCount === items.length) {
-                callback(returnedError, resultArray);
+                if (handleItemsCount === items.length) {
+                    callback(returnedError, resultArray);
+                }
             }
         });
     });
