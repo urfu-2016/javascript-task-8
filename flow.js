@@ -21,9 +21,9 @@ exports.serial = function (operations, callback) {
         index++;
         if (err || index === operations.length) {
             callback(err, data);
+        } else {
+            operations[index](data, cb);
         }
-        // console.info(data);
-        operations[index](data, cb);
     };
     operations[index](cb);
 
