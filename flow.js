@@ -68,7 +68,7 @@ function runAsyncFunctions(items, operation, callback, rule) {
                     callback(null, result);
                 }
             });
-        }, Math.random() * 1000);
+        }, 0);
     });
 }
 
@@ -96,7 +96,7 @@ exports.makeAsync = function (func) {
         setTimeout(function () {
             var temp = func(files);
             next(null, temp);
-        }, Math.random() * 100);
+        }, 0);
     };
 };
 
