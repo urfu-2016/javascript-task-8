@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = false;
+exports.isStar = true;
 
 /**
  * Последовательное выполнение операций
@@ -90,7 +90,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
         return;
     }
     var itemsCopy = items.slice();
-    var count = limit === Infinity ? items.length : limit;
+    var count = items.length;
     var resultData = [];
     var errCb = false;
     var limitItems = itemsCopy.splice(0, limit);
@@ -104,7 +104,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             resultData[funcNum] = data;
             funcNum++;
             limitItems.shift();
-            if (limitItems.length === 0 && itemsCopy.length !== 0) {
+            if (limitItems.length === 0 && itemsCopy.length !== 0 && count !== 0) {
                 limitItems = itemsCopy.splice(0, limit);
                 limitItems.forEach(function (item) {
                     operation(item, cb);
