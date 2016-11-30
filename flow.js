@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = true;
+exports.isStar = false;
 
 /**
  * Последовательное выполнение операций
@@ -12,6 +12,24 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
+
+    if (operations.length === 0) {
+        callback();
+
+        /* null null*/
+
+        return;
+    }
+    var i = 0;
+    function innerCallback(error, data) {
+        i++;
+        if (i === operations.length || error) {
+            callback(error, data);
+        } else {
+            operations[i](data, innerCallback);
+        }
+    }
+    operations[i](innerCallback);
     console.info(operations, callback);
 };
 
@@ -22,6 +40,42 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
+    var errors = [];
+    var results = [];
+    var notFinished = [];
+    for (var k = 0; k < items.length; k++) {
+        errors[k] = false;
+        notFinished[k] = true;
+    }
+
+    if (items.length === 0) {
+        callback(null, []);
+    }
+
+    function innerCallback(i, error, result) {
+        if (error) {
+            errors[i] = true;
+            callback(error);
+        }
+
+        for (var j = 0; j < errors.length; j++) {
+            if (errors[j]) {
+                return;
+            }
+        }
+        results[i] = result;
+        notFinished[i] = false;
+        for (var l = 0; l < notFinished.length; l++) {
+            if (notFinished[l]) {
+                return;
+            }
+        }
+        callback(null, results);
+    }
+
+    for (var i = 0; i < items.length; i++) {
+        operation(items[i], innerCallback.bind(null, i));
+    }
     console.info(items, operation, callback);
 };
 
@@ -33,14 +87,40 @@ exports.map = function (items, operation, callback) {
  */
 exports.filter = function (items, operation, callback) {
     console.info(items, operation, callback);
+    exports.map(items, operation, function (error, results) {
+        if (error) {
+            callback(error, null);
+
+            return;
+        }
+        var filteredResults = [];
+        for (var i = 0; i < items.length; i++) {
+            if (results[i]) {
+                filteredResults.push(items[i]);
+            }
+        }
+        callback(null, filteredResults);
+    });
+
 };
 
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
  */
 exports.makeAsync = function (func) {
-    console.info(func);
+    return function () {
+        var arguments2 = [].slice.call(arguments, 1);
+        setTimeout(function () {
+            try {
+                arguments2[arguments2.length - 1](null,
+                    func.apply(null, arguments2.slice(0, arguments2.length - 1)));
+            } catch (error) {
+                arguments2[arguments2.length - 1](error);
+            }
+        }, 0);
+    }.bind(null, func);
 };
 
 /**
