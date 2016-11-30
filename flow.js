@@ -5,6 +5,7 @@
  * Реализованы методы mapLimit и filterLimit
  */
 exports.isStar = true;
+
 /**
  * Последовательное выполнение операций
  * @param {Function[]} operations – функции для выполнения
