@@ -13,6 +13,7 @@ exports.isStar = true;
  */
 exports.serial = function (operations, callback) {
     var currentOperationIndex = 0;
+
     function next(err, data) {
         if (err || currentOperationIndex === operations.length) {
             callback(err, data);
@@ -111,17 +112,13 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @star
  * @param {Array} items – элементы для итерации
  * @param {Number} limit – максимальное количество выполняемых параллельно операций
- * @param {Function} operation – функция для обработки элементов
+ * @param {Function} operation –  функция для обработки элементов
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
     exports.mapLimit(items, limit, operation, function (err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(err, items.filter(function (item, index) {
-                return data[index];
-            }));
-        }
+        callback(err, data && items.filter(function (item, index) {
+            return data[index];
+        }));
     });
 };
