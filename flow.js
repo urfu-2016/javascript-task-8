@@ -14,7 +14,7 @@ exports.isStar = false;
 exports.serial = function (operations, callback) {
     // console.info(operations, callback);
     if (!operations || operations.length === 0) {
-        callback(null, null);
+        callback(null, []);
     } else {
         var index = 0;
         var cb = function (err, data) {
@@ -40,7 +40,7 @@ exports.map = function (items, operation, callback) {
     // console.info(items, operation, callback);
 
     if (items.length === 0) {
-        callback(null, null);
+        callback(null, []);
     }
 
     var countErrors = 0;
