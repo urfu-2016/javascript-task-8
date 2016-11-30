@@ -15,6 +15,8 @@ exports.isStar = false;
 exports.serial = function (operations, callback) {
     if (!operations || operations.length === 0) {
         callback(null, null);
+
+        return;
     }
     var currentOperationIndex = 0;
     operations[0](interiorCallback);
@@ -37,20 +39,20 @@ exports.serial = function (operations, callback) {
 
 exports.map = function (items, operation, callback) {
     var completedFunctionCount = 0;
-    var errorCount = 0;
+    var isError = false;
     var result = [];
-    if (items.length === 0) {
+    if (!items.length) {
         callback(null, []);
 
         return;
     }
     items.forEach(function (item, index) {
         operation(item, function (opIndex, err, data) {
-            if (errorCount > 0) {
+            if (isError) {
                 return;
             }
             if (err) {
-                errorCount++;
+                isError = true;
                 callback(err);
 
                 return;
