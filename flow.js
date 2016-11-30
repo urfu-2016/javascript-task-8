@@ -46,13 +46,13 @@ exports.map = function (items, operation, callback) {
     }
     items.forEach(function (item, index) {
         operation(item, function (opIndex, err, data) {
+            if (errorCount > 0) {
+                return;
+            }
             if (err) {
                 errorCount++;
                 callback(err);
 
-                return;
-            }
-            if (errorCount > 0) {
                 return;
             }
             result[opIndex] = data;
