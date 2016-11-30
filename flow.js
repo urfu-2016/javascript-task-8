@@ -28,6 +28,7 @@ exports.serial = function (operations, callback) {
         }
     }
     operations[i](innerCallback);
+    console.info(operations, callback);
 };
 
 /**
@@ -44,7 +45,7 @@ exports.map = function (items, operation, callback) {
     }
 
     if (items.length === 0) {
-        callback();
+        callback(null, []);
     }
 
     function innerCallback(i, error, result) {
@@ -64,6 +65,7 @@ exports.map = function (items, operation, callback) {
     for (var i = 0; i < items.length; i++) {
         operation(items[i], innerCallback.bind(null, i));
     }
+    console.info(items, operation, callback);
 };
 
 /**
@@ -73,6 +75,7 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
+    console.info(items, operation, callback);
     exports.map(items, operation, function (error, results) {
         if (error) {
             callback(error, null);
