@@ -8,18 +8,19 @@ exports.isStar = false;
 
 
 function makeAsync(func) {
-    return function (args, callback) {
-        setTimeout(function () {
+    return function () {
+        setTimeout(function (args) {
             var error = null;
             var res = null;
+            var callback = args.pop();
             try {
-                res = func(args);
+                res = func.apply(null, args);
             } catch (err) {
                 error = err;
                 callback(err);
             }
             callback(error, res);
-        }, 0);
+        }, 0, [].slice.call(arguments));
     };
 }
 
@@ -32,7 +33,7 @@ function serial(operations, callback) {
         } else {
             nextData = data;
             index++;
-            nextOperation();
+            setTimeout(nextOperation, 0);
         }
     };
     function nextOperation() {
@@ -42,12 +43,19 @@ function serial(operations, callback) {
             operations[index](nextData, nextFunc);
         }
     }
-    operations[0](nextFunc);
+    operations[index](nextFunc);
 }
 
 function myMap(items, operation, callback) {
+    if (items.length === 0) {
+        operation(function (err, data) {
+            callback(err, data);
+        });
+
+        return;
+    }
     var resultArray = [];
-    var sum = 0;
+    var handleItemsCount = 0;
     var returnedError = null;
     items.forEach(function (item, index) {
         operation(item, function (err, data) {
@@ -56,10 +64,10 @@ function myMap(items, operation, callback) {
                     returnedError = err;
                 } else {
                     resultArray[index] = data;
-                    sum++;
+                    handleItemsCount++;
                 }
             }
-            if (sum === items.length || returnedError) {
+            if (handleItemsCount === items.length || returnedError) {
                 callback(returnedError, resultArray);
             }
         });
@@ -87,7 +95,9 @@ function myFilter(items, operation, callback) {
 exports.serial = function (operations, callback) {
     console.info('serial');
     console.info(operations, callback);
-    serial(operations, callback);
+    if (operations.length > 0) {
+        serial(operations, callback);
+    }
 };
 
 /**
