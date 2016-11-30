@@ -143,12 +143,20 @@ exports.filter = function (items, operation, callback) {
  */
 exports.makeAsync = function (func) {
     return function () {
-        var args = [].slice.call(arguments);
-        var data = args[0];
 
-        return setTimeout(function () {
-            args[1](null, func(data));
-        }, 0);
+        return setTimeout(function (args) {
+            args = [].slice.call(args);
+            var callback = args.pop();
+            var error = null;
+            var result = null;
+            try {
+                result = func.apply(null, args);
+            } catch (err) {
+                error = err;
+            }
+
+            callback(error, result);
+        }, 0, arguments);
     };
 };
 
