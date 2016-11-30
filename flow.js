@@ -42,18 +42,29 @@ exports.map = function (items, operation, callback) {
 
     var result = {
         array: [],
-        filteredItemsCount: 0
+        passedItemsCount: 0
     };
 
-    function operationCallback(res, index, error, data) {
+    function operationCallback(error, data) {
+        var args = [].slice.call(arguments);
+        var res = args[0];
+        var index = args[1];
+        error = args[2];
+        data = args[3];
+
         if (arguments.length === 3) {
-            return callback(error);
+            data = error;
+            error = undefined;
+        }
+
+        if (error) {
+            callback(error);
         }
 
         res.array[index] = data;
-        res.filteredItemsCount++;
+        res.passedItemsCount++;
 
-        if (res.filteredItemsCount === items.length) {
+        if (res.passedItemsCount === items.length) {
             res.array = res.array
                 .filter(function (element) {
                     return element;
@@ -82,18 +93,18 @@ exports.filter = function (items, operation, callback) {
 
     var result = {
         array: [],
-        filteredItemsCount: 0
+        passedItemsCount: 0
     };
 
-    function operationCallback(error, data) {
-        var args = [].slice.call(arguments);
-        var res = args[0];
-        var item = args[1];
-        var index = args[2];
-        error = args[3];
-        data = args[4];
+    function operationCallback(res, item, index, error) {
+        var data = [].slice.call(arguments)[4];
         if (arguments.length === 4) {
-            return callback(error);
+            data = error;
+            error = undefined;
+        }
+
+        if (error) {
+            callback(error);
         }
 
         if (data) {
@@ -101,9 +112,9 @@ exports.filter = function (items, operation, callback) {
         } else {
             res.array[index] = false;
         }
-        res.filteredItemsCount++;
+        res.passedItemsCount++;
 
-        if (res.filteredItemsCount === items.length) {
+        if (res.passedItemsCount === items.length) {
             res.array = res.array
                 .filter(function (element) {
                     return element;
