@@ -97,22 +97,6 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    runAsyncLimitFunctions(items, limit, operation, callback, returnProcessedItem);
-};
-
-/**
- * Параллельная фильтрация элементов с ограничением
- * @star
- * @param {Array} items – элементы для итерации
- * @param {Number} limit – максимальное количество выполняемых параллельно операций
- * @param {Function} operation – функция для обработки элементов
- * @param {Function} callback
- */
-exports.filterLimit = function (items, limit, operation, callback) {
-    runAsyncLimitFunctions(items, limit, operation, callback, returnItemIfProcessedItem);
-};
-
-function runAsyncLimitFunctions(items, limit, operation, callback, rule) {
     var endedOperations = 0;
     var launchedOperations = 0;
     var result = [];
@@ -132,7 +116,7 @@ function runAsyncLimitFunctions(items, limit, operation, callback, rule) {
 
                 return;
             }
-            result = result.concat(rule(element, data));
+            result = result.concat(returnProcessedItem(element, data));
             launchedOperations--;
             endedOperations++;
             launchMoreOperations();
@@ -141,4 +125,43 @@ function runAsyncLimitFunctions(items, limit, operation, callback, rule) {
             }
         });
     }
-}
+};
+
+/**
+ * Параллельная фильтрация элементов с ограничением
+ * @star
+ * @param {Array} items – элементы для итерации
+ * @param {Number} limit – максимальное количество выполняемых параллельно операций
+ * @param {Function} operation – функция для обработки элементов
+ * @param {Function} callback
+ */
+exports.filterLimit = function (items, limit, operation, callback) {
+    var endedOperations = 0;
+    var launchedOperations = 0;
+    var result = [];
+    launchMoreOperations();
+
+    function launchMoreOperations() {
+        while (launchedOperations < limit && items.length > launchedOperations + endedOperations) {
+            var item = items[++launchedOperations + endedOperations - 1];
+            runOperation(item);
+        }
+    }
+
+    function runOperation(element) {
+        operation(element, function (err, data) {
+            if (err) {
+                console.info(err);
+
+                return;
+            }
+            result = result.concat(returnItemIfProcessedItem(element, data));
+            launchedOperations--;
+            endedOperations++;
+            launchMoreOperations();
+            if (endedOperations === items.length) {
+                callback(undefined, result);
+            }
+        });
+    }
+};
