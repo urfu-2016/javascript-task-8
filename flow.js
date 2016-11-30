@@ -16,8 +16,6 @@ exports.serial = function (operations, callback) {
     if (operations.length === 0) {
         callback();
 
-        /* null null*/
-
         return;
     }
     var i = 0;
@@ -40,11 +38,9 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    var errors = [];
     var results = [];
     var notFinished = [];
     for (var k = 0; k < items.length; k++) {
-        errors[k] = false;
         notFinished[k] = true;
     }
 
@@ -54,14 +50,7 @@ exports.map = function (items, operation, callback) {
 
     function innerCallback(i, error, result) {
         if (error) {
-            errors[i] = true;
             callback(error);
-        }
-
-        for (var j = 0; j < errors.length; j++) {
-            if (errors[j]) {
-                return;
-            }
         }
         results[i] = result;
         notFinished[i] = false;
