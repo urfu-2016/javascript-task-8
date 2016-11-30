@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = false;
+exports.isStar = true;
 
 /**
  * Последовательное выполнение операций
