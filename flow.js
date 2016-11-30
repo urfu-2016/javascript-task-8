@@ -116,25 +116,29 @@ function runAsyncLimitFunctions(items, limit, operation, callback, rule) {
     var endedOperations = 0;
     var launchedOperations = 0;
     var result = [];
-    (function launchMoreOperations() {
+    launchMoreOperations();
+
+    function launchMoreOperations() {
         while (launchedOperations < limit && items.length > launchedOperations + endedOperations) {
             var item = items[++launchedOperations + endedOperations - 1];
-            (function runOperation(element) {
-                operation(item, function (err, data) {
-                    if (err) {
-                        console.info(err);
-
-                        return;
-                    }
-                    result = result.concat(rule(element, data));
-                    launchedOperations--;
-                    endedOperations++;
-                    launchMoreOperations();
-                    if (endedOperations === items.length) {
-                        callback(undefined, result);
-                    }
-                });
-            }(item));
+            runOperation(item);
         }
-    }());
+    }
+
+    function runOperation(element) {
+        operation(element, function (err, data) {
+            if (err) {
+                console.info(err);
+
+                return;
+            }
+            result = result.concat(rule(element, data));
+            launchedOperations--;
+            endedOperations++;
+            launchMoreOperations();
+            if (endedOperations === items.length) {
+                callback(undefined, result);
+            }
+        });
+    }
 }
