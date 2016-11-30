@@ -79,6 +79,7 @@ function returnItemIfProcessedItem(item, processedItem) {
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
  */
 exports.makeAsync = function (func) {
     return function (files, next) {
