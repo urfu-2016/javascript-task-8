@@ -41,7 +41,7 @@ exports.serial = function (operations, callback) {
  */
 exports.map = function (items, operation, callback) {
     if (items.length === 0 || !items) {
-        callback(null, null);
+        callback(null, []);
 
         return;
     }
@@ -75,7 +75,7 @@ exports.map = function (items, operation, callback) {
  */
 exports.filter = function (items, operation, callback) {
     if (items.length === 0 || !items) {
-        callback(null, null);
+        callback(null, []);
 
         return;
     }
