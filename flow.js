@@ -61,14 +61,13 @@ function myMap(items, operation, callback) {
                 if (err) {
                     returnedError = err;
                     callback(err);
-
-                    return;
+                } else {
+                    resultArray[index] = data;
+                    handleItemsCount++;
                 }
-                resultArray[index] = data;
-                handleItemsCount++;
-                if (handleItemsCount === items.length) {
-                    callback(returnedError, resultArray);
-                }
+            }
+            if (handleItemsCount === items.length && !returnedError) {
+                callback(null, resultArray);
             }
         });
     });
@@ -77,6 +76,8 @@ function myMap(items, operation, callback) {
 function myFilter(items, operation, callback) {
     if (items.length === 0) {
         callback(null, []);
+
+        return;
     }
     myMap(items, operation, function (err, data) {
         if (err) {
