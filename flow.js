@@ -17,14 +17,14 @@ exports.serial = function (operations, callback) {
     function innerCallback(err, data) {
         if (err) {
             callback(err);
-        }
-
-        operationIndex++;
-
-        if (operationIndex < operations.length) {
-            operations[operationIndex](data, innerCallback);
         } else {
-            callback(null, data);
+            operationIndex++;
+
+            if (operationIndex < operations.length) {
+                operations[operationIndex](data, innerCallback);
+            } else {
+                callback(null, data);
+            }
         }
     }
 
