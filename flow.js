@@ -55,16 +55,26 @@ function runAsyncFunctions(items, operation, callback, rule) {
 
                     return;
                 }
-                endedOperations++;
                 var res;
                 if ((res = rule(item, data))) {
-                    result.splice(index, 0, res);
+                    if (Array.isArray(res)) {
+                        insertElementsInArray(res, result, index);
+                    } else {
+                        result.splice(index, 0, res);
+                    }
                 }
+                endedOperations++;
                 if (endedOperations === items.length) {
                     callback(null, result);
                 }
             });
-        }, 0);
+        }, Math.random() * 1000);
+    });
+}
+
+function insertElementsInArray(res, array, index) {
+    res.forEach(function (resItem, i) {
+        array.splice(index + i, 0, resItem);
     });
 }
 
@@ -86,7 +96,7 @@ exports.makeAsync = function (func) {
         setTimeout(function () {
             var temp = func(files);
             next(null, temp);
-        }, 0);
+        }, Math.random() * 100);
     };
 };
 
@@ -141,7 +151,13 @@ function runAsyncLimitFunctions(items, limit, operation, callback) {
                 }
                 var res;
                 if ((res = currentFunction(item, data))) {
-                    result.splice(index, 0, res);
+                    if (Array.isArray(res)) {
+                        res.forEach(function (resItem, i) {
+                            result.splice(index + i, 0, resItem);
+                        });
+                    } else {
+                        result.splice(index, 0, res);
+                    }
                 }
                 launchedOperations--;
                 endedOperations++;
