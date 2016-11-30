@@ -15,8 +15,9 @@ exports.serial = function (operations, callback) {
     console.info(operations, callback);
     if (!operations || !operations.length) {
         callback(null, null);
-    }
 
+        return;
+    }
     var pointer = 1;
     var next = function (error, data) {
         if (error || operations.length === pointer) {
@@ -95,11 +96,9 @@ exports.filter = function (items, operation, callback) {
     exports.map(items, operation, function (error, data) {
         if (error) {
             callback(error, null);
-
-            return;
+        } else {
+            callback(null, filterResult(items, data));
         }
-        callback(null, filterResult(items, data));
-
     });
 };
 
