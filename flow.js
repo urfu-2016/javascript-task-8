@@ -12,6 +12,9 @@ exports.isStar = false;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
+    if (!operations) {
+        callback(null, null);
+    }
     var index = 0;
     var cb = function (error, result) {
         index++;
@@ -33,6 +36,9 @@ exports.serial = function (operations, callback) {
  */
 
 exports.map = function (items, operation, callback) {
+    if (!items) {
+        callback(null, null);
+    }
     var count = items.length;
     var errorCallback = false;
     var results = [];
