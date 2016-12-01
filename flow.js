@@ -110,8 +110,8 @@ exports.mapLimit = function (items, limit, operation, callback) {
     function internalCallback(executionInfo, error, result) {
         executionInfo.finished = true;
 
-        if (executionInfos.some(function (executionInfo) {
-            return executionInfo.error;
+        if (executionInfos.some(function (info) {
+            return info.error;
         })) {
             return;
         }
@@ -129,14 +129,14 @@ exports.mapLimit = function (items, limit, operation, callback) {
             nextExecutionInfo.started = true;
         }
 
-        if (executionInfos.every(function (executionInfo) {
-            return executionInfo.finished;
+        if (executionInfos.every(function (info) {
+            return info.finished;
         })) {
             callback(null, results);
         }
     }
 
-    executionInfos.slice(0, limit).forEach(function(executionInfo) {
+    executionInfos.slice(0, limit).forEach(function (executionInfo) {
         operation(executionInfo.value, internalCallback.bind(null, executionInfo));
         executionInfo.started = true;
     });
