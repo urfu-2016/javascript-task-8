@@ -13,10 +13,11 @@ exports.isStar = false;
  */
 exports.serial = function (operations, callback) {
     function next(error, data) {
-        if (arguments.length === 1) {
+        if (!data) {
             data = error;
             error = undefined;
         }
+
         if (error) {
             callback(error, data);
         } else if (operations.length > 0) {
@@ -29,7 +30,7 @@ exports.serial = function (operations, callback) {
     if (operations.length > 0) {
         operations.shift()(next);
     } else {
-        callback(null, null);
+        callback();
     }
 };
 
@@ -40,17 +41,19 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    if (items.length === 0) {
-        callback(null, items);
-
-        return;
-    }
-
     var errorOccurred = false;
     var result = {
         array: [],
         passedItemsCount: 0
     };
+
+    if (items.length === 0) {
+        callback(null, items);
+    } else {
+        for (var i = 0; i < items.length; i++) {
+            operation(items[i], operationCallback.bind(null, result, i));
+        }
+    }
 
     function operationCallback(res, index, error, data) {
         if (arguments.length === 3) {
@@ -77,11 +80,6 @@ exports.map = function (items, operation, callback) {
             callback(null, res.array);
         }
     }
-
-    for (var i = 0; i < items.length; i++) {
-        operation(items[i], operationCallback.bind(null, result, i));
-    }
-
 };
 
 /**
@@ -91,17 +89,19 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    if (items.length === 0) {
-        callback(null, items);
-
-        return;
-    }
-
     var errorOccurred = false;
     var result = {
         array: [],
         passedItemsCount: 0
     };
+
+    if (items.length === 0) {
+        callback(null, items);
+    } else {
+        for (var i = 0; i < items.length; i++) {
+            operation(items[i], operationCallback.bind(null, result, items[i], i));
+        }
+    }
 
     function operationCallback(res, item, index, error) {
         var data = [].slice.call(arguments)[4];
@@ -133,10 +133,6 @@ exports.filter = function (items, operation, callback) {
             callback(null, res.array);
         }
     }
-
-    for (var i = 0; i < items.length; i++) {
-        operation(items[i], operationCallback.bind(null, result, items[i], i));
-    }
 };
 
 /**
@@ -146,9 +142,7 @@ exports.filter = function (items, operation, callback) {
  */
 exports.makeAsync = function (func) {
     return function () {
-
         return setTimeout(function (args) {
-            args = [].slice.call(args);
             var callback = args.pop();
             var error = null;
             var result = null;
@@ -159,7 +153,7 @@ exports.makeAsync = function (func) {
             }
 
             callback(error, result);
-        }, 0, arguments);
+        }, 0, [].slice.call(arguments));
     };
 };
 
