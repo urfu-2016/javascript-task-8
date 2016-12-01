@@ -109,6 +109,9 @@ exports.filter = function (items, operation, callback) {
 exports.makeAsync = function (func) {
     return function () {
         setTimeout(function (args) {
+            if (args.length === 0) {
+                throw new TypeError('Missing callback');
+            }
             var callback = args[args.length - 1];
             try {
                 callback(null, func.apply(null, args.slice(0, args.length - 1)));
