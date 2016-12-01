@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = false;
+exports.isStar = true;
 
 /**
  * Последовательное выполнение операций
@@ -41,12 +41,15 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    function resultedMap(resultValues) {
-        return resultValues;
-    }
-
-    baseMap(items, operation, callback, resultedMap);
+    baseMap(items, operation, callback, {
+        resultedMap: mapResultedMap,
+        limit: [].slice.call(arguments)[3]
+    });
 };
+
+function mapResultedMap(resultValues) {
+    return resultValues;
+}
 
 /**
  * Параллельная фильтрация элементов
@@ -55,25 +58,32 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    function resultedMap(resultValues, inputItems) {
-        return resultValues
-            .reduce(function (filteredItems, value, index) {
-                if (value) {
-                    filteredItems.push(inputItems[index]);
-                }
-
-                return filteredItems;
-            }, []);
-    }
-
-    baseMap(items, operation, callback, resultedMap);
+    baseMap(items, operation, callback, {
+        resultedMap: filterResultedMap,
+        limit: [].slice.call(arguments)[3]
+    });
 };
 
-function baseMap(items, operation, callback, resultedMap) {
+function filterResultedMap(resultValues, inputItems) {
+    return resultValues
+        .reduce(function (filteredItems, value, index) {
+            if (value) {
+                filteredItems.push(inputItems[index]);
+            }
+
+            return filteredItems;
+        }, []);
+}
+
+function baseMap(items, operation, callback, additionalParameters) {
+    var resultedMap = additionalParameters.resultedMap;
+    var limit = additionalParameters.limit ? additionalParameters.limit : Infinity;
     var result = {
         values: [],
         passedItemsCount: 0,
-        errorOccurred: false
+        errorOccurred: false,
+        calledFunctionsCount: 0,
+        currentIndex: 0
     };
 
     if (items.length === 0) {
@@ -81,6 +91,8 @@ function baseMap(items, operation, callback, resultedMap) {
     } else {
         for (var i = 0; i < items.length && !result.errorOccurred; i++) {
             operation(items[i], operationCallback.bind(null, i));
+            result.calledFunctionsCount++;
+            result.currentIndex++;
         }
     }
 
@@ -98,8 +110,14 @@ function baseMap(items, operation, callback, resultedMap) {
             result.passedItemsCount++;
 
             if (result.passedItemsCount === items.length) {
-                var resultForCallback = resultedMap(result.values, items);
-                callback(null, resultForCallback);
+                callback(null, resultedMap(result.values, items));
+            }
+
+            result.currentIndex--;
+            if (result.calledFunctionsCount <= limit && result.currentIndex < items.length) {
+                var j = result.currentIndex;
+                operation(items[j], operationCallback.bind(null, j));
+                result.currentIndex++;
             }
         }
     }
@@ -136,7 +154,7 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция mapLimit не реализована'));
+    exports.map(items, operation, callback, limit);
 };
 
 /**
@@ -148,5 +166,5 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция filterLimit не реализована'));
+    exports.filter(items, operation, callback, limit);
 };
