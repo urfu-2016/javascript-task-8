@@ -13,7 +13,7 @@ exports.isStar = false;
  */
 exports.serial = function (operations, callback) {
     function next(error, data) {
-        if (!data) {
+        if (arguments.length === 1) {
             data = error;
             error = undefined;
         }
