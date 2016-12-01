@@ -13,20 +13,20 @@ exports.isStar = true;
  */
 exports.serial = function (operations, callback) {
 
-    var index = 0;
-    var opLen = operations.length - 1;
+    var operationIndex = 0;
+    var operationsLen = operations.length - 1;
     function serialCallback(error, data) {
-        if (!error && index !== opLen) {
+        if (!error && operationIndex !== operationsLen) {
             if (data) {
-                operations[++index](data, serialCallback);
+                operations[++operationIndex](data, serialCallback);
             } else {
-                operations[++index](serialCallback);
+                operations[++operationIndex](serialCallback);
             }
         } else {
             callback(error, data);
         }
     }
-    if (opLen >= 0) {
+    if (operationsLen >= 0) {
         operations[0](serialCallback);
     } else {
         callback(null, null);
@@ -89,16 +89,17 @@ exports.mapLimit = function (items, limit, operation, callback) {
         return;
     }
 
-    var operationsKeeper = items.map(function (item, index) {
-        return { 'op': operation.bind(null, item), 'index': index };
+    var operationsKeeper = items.map(function (item, operationIndex) {
+
+        return { 'operation': operation.bind(null, item), 'operationIndex': operationIndex };
     });
 
-    var opQueue = operationsKeeper.slice();
+    var operationsQueue = operationsKeeper.slice();
     var doneCount = 0;
     var activeCount = 0;
     var resultDict = {};
     var isError = false;
-    function execOperation(index, error, data) {
+    function execOperation(operationIndex, error, data) {
         if (error && !isError) {
             callback(error, data);
             isError = true;
@@ -106,7 +107,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             return;
         }
 
-        resultDict[index] = data;
+        resultDict[operationIndex] = data;
         doneCount++;
         activeCount--;
         if (doneCount === items.length) {
@@ -118,22 +119,22 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
             return;
         }
-        if (opQueue.length) {
-            opQueue.splice(0, limit).forEach(function (keeper) {
+        if (operationsQueue.length) {
+            operationsQueue.splice(0, limit).forEach(function (keeper) {
                 handleOperation(keeper);
             });
         }
     }
 
-    function handleOperation(op) {
+    function handleOperation(keeper) {
         if (activeCount < limit) {
             activeCount++;
-            op.op(execOperation.bind(null, op.index));
+            keeper.operation(execOperation.bind(null, keeper.operationIndex));
         } else {
-            opQueue.unshift(op);
+            operationsQueue.unshift(keeper);
         }
     }
-    opQueue.splice(0, limit).forEach(function (keeper) {
+    operationsQueue.splice(0, limit).forEach(function (keeper) {
         handleOperation(keeper);
     });
 };
@@ -152,9 +153,9 @@ exports.filterLimit = function (items, limit, operation, callback) {
             callback(err);
 
         } else {
-            data = items.filter(function (item, index) {
+            data = items.filter(function (item, operationIndex) {
 
-                return data[index];
+                return data[operationIndex];
             });
             callback(null, data);
         }
