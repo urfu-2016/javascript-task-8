@@ -13,11 +13,6 @@ exports.isStar = true;
  */
 exports.serial = function (operations, callback) {
     function next(error, data) {
-        if (arguments.length === 1) {
-            data = error;
-            error = undefined;
-        }
-
         if (error) {
             callback(error, data);
         } else if (operations.length > 0) {
@@ -91,10 +86,6 @@ function baseMap(items, operation, callback, additionalParameters) {
     function operationCallback(index, error, data) {
         currentState.progressCount--;
         currentState.passedItemsCount++;
-        if (arguments.length === 2) {
-            data = error;
-            error = undefined;
-        }
 
         if (error && !currentState.errorOccurred) {
             callback(error, data);
