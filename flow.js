@@ -14,6 +14,8 @@ exports.isStar = true;
 exports.serial = function (operations, callback) {
     if (!operations || operations.length === 0) {
         throw new TypeError('Empty parameters');
+
+        return;
     }
     var currentOperationIndex = 0;
     operations[0](interiorCallback);
