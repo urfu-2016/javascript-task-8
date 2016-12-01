@@ -17,40 +17,27 @@ function getFirstNotStarted(executionInfos) {
     return null;
 }
 
-function allFinished(executionInfos) {
-    return executionInfos.filter(function (value) {
-        return value.finished;
-    }).length === executionInfos.length;
-}
-
-function hasErrors(executionInfos) {
-    return executionInfos.filter(function (value) {
-        return value.error;
-    }).length > 0;
-}
-
 /**
  * Последовательное выполнение операций
  * @param {Function[]} operations – функции для выполнения
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    if (operations.length === 0) {
+    if (!operations.length) {
         callback(null, null);
 
         return;
     }
 
-    var operationsStack = operations.reverse();
     function serialCallback(error, result) {
-        if (error || operationsStack.length === 0) {
+        if (error || !operations.length) {
             callback(error, result);
 
             return;
         }
-        operationsStack.pop()(result, serialCallback);
+        operations.shift()(result, serialCallback);
     }
-    operationsStack.pop()(serialCallback);
+    operations.shift()(serialCallback);
 };
 
 /**
@@ -103,7 +90,7 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    if (items.length === 0) {
+    if (!items.length) {
         callback(null, []);
 
         return;
@@ -123,7 +110,9 @@ exports.mapLimit = function (items, limit, operation, callback) {
     function internalCallback(executionInfo, error, result) {
         executionInfo.finished = true;
 
-        if (hasErrors(executionInfos)) {
+        if (executionInfos.some(function (executionInfo) {
+            return executionInfo.error;
+        })) {
             return;
         }
 
@@ -140,15 +129,17 @@ exports.mapLimit = function (items, limit, operation, callback) {
             nextExecutionInfo.started = true;
         }
 
-        if (allFinished(executionInfos)) {
+        if (executionInfos.every(function (executionInfo) {
+            return executionInfo.finished;
+        })) {
             callback(null, results);
         }
     }
 
-    for (var i = 0; i < Math.min(limit, executionInfos.length); i++) {
-        operation(executionInfos[i].value, internalCallback.bind(null, executionInfos[i]));
-        executionInfos[i].started = true;
-    }
+    executionInfos.slice(0, limit).forEach(function(executionInfo) {
+        operation(executionInfo.value, internalCallback.bind(null, executionInfo));
+        executionInfo.started = true;
+    });
 };
 
 /**
