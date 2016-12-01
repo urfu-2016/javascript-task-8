@@ -90,7 +90,7 @@ exports.filter = function (items, operation, callback) {
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
  */
- 
+
 exports.makeAsync = function (func) {
     // console.info(func);
     return function () {
