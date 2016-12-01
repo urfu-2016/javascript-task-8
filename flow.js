@@ -13,10 +13,9 @@ exports.isStar = true;
  */
 exports.serial = function (operations, callback) {
     if (!operations || !operations.length) {
-        throw new Error();
-        // callback(null, null);
+        callback(null, null);
 
-        // return;
+        return;
     }
     var currentOperationIndex = 0;
     operations[0](interiorCallback);
