@@ -119,7 +119,7 @@ exports.filter = function (items, operation, callback) {
     if (items.length === 0) {
         callback(null, items);
     } else {
-        for (var i = 0; i < items.length && !errorOccurred; i++) {
+        for (var i = 0; i < items.length; i++) {
             operation(items[i], operationCallback.bind(null, items[i], i));
         }
     }
@@ -134,7 +134,7 @@ exports.filter = function (items, operation, callback) {
             callback(error, data);
             errorOccurred = true;
         } else {
-            result.values[index] = data ? item : data;
+            result.values[index] = data ? item : false;
             result.passedItemsCount++;
 
             if (result.passedItemsCount === items.length) {
