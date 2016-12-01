@@ -53,6 +53,8 @@ exports.map = function (items, operation, callback) {
         errorOccurred: false
     };
 
+    var errorOccurred = false;
+
     if (items.length === 0) {
         callback(null, items);
     } else {
@@ -67,9 +69,9 @@ exports.map = function (items, operation, callback) {
             error = undefined;
         }
 
-        if (error && !result.errorOccurred) {
+        if (error && !errorOccurred) {
             callback(error, data);
-            result.errorOccurred = true;
+            errorOccurred = true;
         } else {
             result.values[index] = data;
             result.passedItemsCount++;
@@ -112,10 +114,12 @@ exports.filter = function (items, operation, callback) {
         errorOccurred: false
     };
 
+    var errorOccurred = false;
+
     if (items.length === 0) {
         callback(null, items);
     } else {
-        for (var i = 0; i < items.length && !result.errorOccurred; i++) {
+        for (var i = 0; i < items.length && !errorOccurred; i++) {
             operation(items[i], operationCallback.bind(null, items[i], i));
         }
     }
@@ -126,9 +130,9 @@ exports.filter = function (items, operation, callback) {
             error = undefined;
         }
 
-        if (error && !result.errorOccurred) {
+        if (error && !errorOccurred) {
             callback(error, data);
-            result.errorOccurred = true;
+            errorOccurred = true;
         } else {
             result.values[index] = data ? item : data;
             result.passedItemsCount++;
