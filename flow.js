@@ -41,48 +41,11 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    if (items.length === 0) {
-        callback(null, items);
-
-        return;
+    function resultedMap(resultValues) {
+        return resultValues;
     }
 
-    var errorOccurred = false;
-    var result = {
-        array: [],
-        passedItemsCount: 0
-    };
-
-    function operationCallback(res, index, error, data) {
-        if (arguments.length === 3) {
-            data = error;
-            error = undefined;
-        }
-
-        if (error && !errorOccurred) {
-            callback(error, data);
-            errorOccurred = true;
-
-            return;
-        }
-
-        res.array[index] = data;
-        res.passedItemsCount++;
-
-        if (res.passedItemsCount === items.length) {
-            res.array = res.array
-                .filter(function (element) {
-                    return element;
-                });
-
-            callback(null, res.array);
-        }
-    }
-
-    for (var i = 0; i < items.length; i++) {
-        operation(items[i], operationCallback.bind(null, result, i));
-    }
-
+    baseMap(items, operation, callback, resultedMap);
 };
 
 /**
@@ -92,53 +55,55 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    if (items.length === 0) {
-        callback(null, items);
+    function resultedMap(resultValues, inputItems) {
+        return resultValues
+            .reduce(function (filteredItems, value, index) {
+                if (value) {
+                    filteredItems.push(inputItems[index]);
+                }
 
-        return;
+                return filteredItems;
+            }, []);
     }
 
-    var errorOccurred = false;
+    baseMap(items, operation, callback, resultedMap);
+};
+
+function baseMap(items, operation, callback, resultedMap) {
     var result = {
-        array: [],
-        passedItemsCount: 0
+        values: [],
+        passedItemsCount: 0,
+        errorOccurred: false
     };
 
-    function operationCallback(res, item, index, error) {
-        var data = [].slice.call(arguments)[4];
-        if (arguments.length === 4) {
+    if (items.length === 0) {
+        callback(null, items);
+    } else {
+        for (var i = 0; i < items.length && !result.errorOccurred; i++) {
+            operation(items[i], operationCallback.bind(null, i));
+        }
+    }
+
+    function operationCallback(index, error, data) {
+        if (arguments.length === 2) {
             data = error;
             error = undefined;
         }
 
-        if (error && !errorOccurred) {
+        if (error && !result.errorOccurred) {
             callback(error, data);
-            errorOccurred = true;
-
-            return;
-        }
-
-        if (data) {
-            res.array[index] = item;
+            result.errorOccurred = true;
         } else {
-            res.array[index] = false;
-        }
-        res.passedItemsCount++;
+            result.values[index] = data;
+            result.passedItemsCount++;
 
-        if (res.passedItemsCount === items.length) {
-            res.array = res.array
-                .filter(function (element) {
-                    return element;
-                });
-
-            callback(null, res.array);
+            if (result.passedItemsCount === items.length) {
+                var resultForCallback = resultedMap(result.values, items);
+                callback(null, resultForCallback);
+            }
         }
     }
-
-    for (var i = 0; i < items.length; i++) {
-        operation(items[i], operationCallback.bind(null, result, items[i], i));
-    }
-};
+}
 
 /**
  * Асинхронизация функций
@@ -148,7 +113,6 @@ exports.filter = function (items, operation, callback) {
 exports.makeAsync = function (func) {
     return function () {
         setTimeout(function (args) {
-            args = [].slice.call(args);
             var callback = args.pop();
             var error = null;
             var result = null;
@@ -159,7 +123,7 @@ exports.makeAsync = function (func) {
             }
 
             callback(error, result);
-        }, 0, arguments);
+        }, 0, [].slice.call(arguments));
     };
 };
 
