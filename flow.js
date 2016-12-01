@@ -41,6 +41,36 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
+    function resultedMap(resultValues) {
+        return resultValues;
+    }
+
+    baseMap(items, operation, callback, resultedMap);
+};
+
+/**
+ * Параллельная фильтрация элементов
+ * @param {Array} items – элементы для фильтрация
+ * @param {Function} operation – функция фильтрации элементов
+ * @param {Function} callback
+ */
+exports.filter = function (items, operation, callback) {
+    function resultedMap(resultValues, inputItems) {
+        return resultValues
+            .reduce(function (filteredItems, value, index) {
+                if (value) {
+                    filteredItems.push(inputItems[index]);
+                }
+
+                return filteredItems;
+            }, []);
+    }
+
+    baseMap(items, operation, callback, resultedMap);
+};
+
+
+function baseMap(items, operation, callback, resultedMap) {
     var result = {
         values: [],
         passedItemsCount: 0,
@@ -50,12 +80,12 @@ exports.map = function (items, operation, callback) {
     if (items.length === 0) {
         callback(null, items);
     } else {
-        for (var i = 0; i < items.length; i++) {
-            operation(items[i], operationCallback.bind(null, i));
+        for (var i = 0; i < items.length && !result.errorOccurred; i++) {
+            operation(items[i], operationCallback.bind(null, items[i], i));
         }
     }
 
-    function operationCallback(index, error, data) {
+    function operationCallback(item, index, error, data) {
         if (!data) {
             data = error;
             error = undefined;
@@ -69,62 +99,12 @@ exports.map = function (items, operation, callback) {
             result.passedItemsCount++;
 
             if (result.passedItemsCount === items.length) {
-                var mappedArray = result.values
-                    .filter(function (element) {
-                        return element;
-                    });
-
-                callback(null, mappedArray);
+                var resultForCallback = resultedMap(result.values, items);
+                callback(null, resultForCallback);
             }
         }
     }
-};
-
-/**
- * Параллельная фильтрация элементов
- * @param {Array} items – элементы для фильтрация
- * @param {Function} operation – функция фильтрации элементов
- * @param {Function} callback
- */
-exports.filter = function (items, operation, callback) {
-    var result = {
-        values: [],
-        passedItemsCount: 0,
-        errorOccurred: false
-    };
-
-    if (items.length === 0) {
-        callback(null, items);
-    } else {
-        for (var i = 0; i < items.length && !errorOccurred; i++) {
-            operation(items[i], operationCallback.bind(null, items[i], i));
-        }
-    }
-
-    function operationCallback(item, index, error, data) {
-        if (!data) {
-            data = error;
-            error = undefined;
-        }
-
-        if (error && !errorOccurred) {
-            callback(error, data);
-            errorOccurred = true;
-        } else {
-            result.values[index] = data ? item : data;
-            result.passedItemsCount++;
-
-            if (result.passedItemsCount === items.length) {
-                result.values = result.values
-                    .filter(function (element) {
-                        return element;
-                    });
-
-                callback(null, result.values);
-            }
-        }
-    }
-};
+}
 
 /**
  * Асинхронизация функций
