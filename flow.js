@@ -81,11 +81,11 @@ function baseMap(items, operation, callback, resultedMap) {
         callback(null, items);
     } else {
         for (var i = 0; i < items.length && !result.errorOccurred; i++) {
-            operation(items[i], operationCallback.bind(null, items[i], i));
+            operation(items[i], operationCallback.bind(null, i));
         }
     }
 
-    function operationCallback(item, index, error, data) {
+    function operationCallback(index, error, data) {
         if (!data) {
             data = error;
             error = undefined;
@@ -113,7 +113,7 @@ function baseMap(items, operation, callback, resultedMap) {
  */
 exports.makeAsync = function (func) {
     return function () {
-        setTimeout(function (args) {
+        return setTimeout(function (args) {
             var callback = args.pop();
             var error = null;
             var result = null;
