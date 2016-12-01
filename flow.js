@@ -18,24 +18,29 @@ exports.serial = function (operations, callback) {
 
         return;
     }
-    var pointer = 1;
-    var next = function (error, data) {
-        if (error || operations.length === pointer) {
+    var nextOperation = function (error, data) {
+        if (error || !operations.length) {
             callback(error, data);
         } else {
-            operations[pointer++](data, next);
+            operations.shift()(data, nextOperation);
         }
     };
-    operations[0](next);
+    operations.shift()(nextOperation);
 };
 
-function fillNoVisited(count, bool) {
-    var isNoVisited = [];
+/**
+ * Заполняем массив указанной длины значением, которое передали
+ * @param {Number} count – длина массива, который нужно вернуть
+ * @param {Boolean} value - элемент, которым заполним весь массив
+ * @returns {Array}
+ */
+function fillArray(count, value) {
+    var result = [];
     for (var index = 0; index < count; index++) {
-        isNoVisited[index] = bool;
+        result[index] = value;
     }
 
-    return isNoVisited;
+    return result;
 }
 
 /**
@@ -49,14 +54,14 @@ exports.map = function (items, operation, callback) {
         callback(null, []);
     }
 
-    var isNoVisited = fillNoVisited(items.length, true);
+    var isNotVisited = fillArray(items.length, true);
+    var errors = fillArray(items.length, false);
     var result = [];
-    var errors = fillNoVisited(items.length, false);
 
     items.forEach(function (element, index) {
         operation(element, function (error, data) {
-            isNoVisited[index] = false;
-            if (isAll(errors)) {
+            isNotVisited[index] = false;
+            if (errors.indexOf(true) !== -1) {
                 return;
             }
             if (error) {
@@ -65,25 +70,13 @@ exports.map = function (items, operation, callback) {
             }
             result[index] = data;
 
-            if (isAll(isNoVisited)) {
+            if (isNotVisited.indexOf(true) !== -1) {
                 return;
             }
-
             callback(null, result);
         });
     });
 };
-
-function isAll(notFinished) {
-    var flag = false;
-    notFinished.forEach(function (item) {
-        if (item) {
-            flag = true;
-        }
-    });
-
-    return flag;
-}
 
 /**
  * Параллельная фильтрация элементов
@@ -102,17 +95,23 @@ exports.filter = function (items, operation, callback) {
     });
 };
 
+/**
+ * Берем элементы по таким индексам, где в data они true
+ * @param {Array} items – элементы для фильтрация
+ * @param {Array} data - элементы, индексы которых надо брать
+ * @returns {Array}
+ */
 function filterResult(items, data) {
-    var newResult = [];
-    for (var index1 = 0; index1 < items.length; index1++) {
-        if (data[index1]) {
-            newResult.push(items[index1]);
-        }
-    }
-
-    return newResult;
+    return items.filter(function (item, index) {
+        return data[index];
+    });
 }
 
+/**
+ * Асинхронизация функций
+ * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
+ */
 exports.makeAsync = function (func) {
     return function () {
         setTimeout(function (args) {
