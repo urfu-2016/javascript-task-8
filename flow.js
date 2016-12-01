@@ -12,7 +12,7 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    if (operations.length >= 0) {
+    if (operations.length > 0) {
         var operationIndex = 0;
         var myCallback = function (error, data) {
             if (error || operationIndex === operations.length) {
