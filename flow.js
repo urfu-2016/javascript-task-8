@@ -41,19 +41,17 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
+    if (items.length === 0) {
+        callback(null, items);
+
+        return;
+    }
+
     var errorOccurred = false;
     var result = {
         array: [],
         passedItemsCount: 0
     };
-
-    if (items.length === 0) {
-        callback(null, items);
-    } else {
-        for (var i = 0; i < items.length; i++) {
-            operation(items[i], operationCallback.bind(null, result, i));
-        }
-    }
 
     function operationCallback(res, index, error, data) {
         if (arguments.length === 3) {
@@ -80,6 +78,11 @@ exports.map = function (items, operation, callback) {
             callback(null, res.array);
         }
     }
+
+    for (var i = 0; i < items.length; i++) {
+        operation(items[i], operationCallback.bind(null, result, i));
+    }
+
 };
 
 /**
@@ -89,19 +92,17 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
+    if (items.length === 0) {
+        callback(null, items);
+
+        return;
+    }
+
     var errorOccurred = false;
     var result = {
         array: [],
         passedItemsCount: 0
     };
-
-    if (items.length === 0) {
-        callback(null, items);
-    } else {
-        for (var i = 0; i < items.length; i++) {
-            operation(items[i], operationCallback.bind(null, result, items[i], i));
-        }
-    }
 
     function operationCallback(res, item, index, error) {
         var data = [].slice.call(arguments)[4];
@@ -132,6 +133,10 @@ exports.filter = function (items, operation, callback) {
 
             callback(null, res.array);
         }
+    }
+
+    for (var i = 0; i < items.length; i++) {
+        operation(items[i], operationCallback.bind(null, result, items[i], i));
     }
 };
 
