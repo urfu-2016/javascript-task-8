@@ -71,12 +71,11 @@ describe('flow', function () {
                         next(new RangeError(), 324);
                     });
                 }
-            ], function (error, data) {
-                assert.strictEqual(data, undefined);
+            ], function (error) {
                 assert.ok(error instanceof TypeError);
-
-                done();
             });
+
+            setTimeout(done, 100);
         });
 
         it('should stop on falsy operations', function (done) {
@@ -218,7 +217,7 @@ describe('flow', function () {
         it('basic', function (done) {
             var callOrder = [];
             flow.mapLimit([2, 4, 3], 2, mapIteratee.bind(null, callOrder), function (err, results) {
-                assert(err === null, err + ' passed instead of "null"');
+                assert.ifError(err);
                 assert.deepEqual(callOrder, [2, 4, 3]);
                 assert.deepEqual(results, [4, 8, 6]);
                 done();

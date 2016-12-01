@@ -6,34 +6,20 @@
  */
 exports.isStar = true;
 
-function Iterator(array) {
-    this.nextIndex = 0;
-    this.array = array;
-}
-
-Iterator.prototype.next = function () {
-    return this.nextIndex < this.array.length
-        ? { value: this.array[this.nextIndex], index: this.nextIndex++ }
-        : null;
-};
-
-Iterator.prototype.hasAny = function () {
-    return this.nextIndex !== this.array.length;
-};
-
 /**
  * Последовательное выполнение операций
  * @param {Function[]} operations – функции для выполнения
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    var operationsIterator = new Iterator(operations || []);
+    operations = operations || [];
+    var currentIndex = 0;
 
     (function internalCallback(error, data) {
-        if (!operationsIterator.hasAny() || error) {
-            callback(error, error ? undefined : data);
+        if (currentIndex === operations.length || error) {
+            callback(error, data);
         } else {
-            operationsIterator.next().value(data || internalCallback, internalCallback);
+            operations[currentIndex++](data || internalCallback, internalCallback);
         }
     }());
 };
@@ -85,7 +71,8 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    var itemsIterator = new Iterator(items || []);
+    items = items || [];
+    var currentIndex = 0;
     var activeWorkersCount = 0;
 
     var result = [];
@@ -105,13 +92,12 @@ exports.mapLimit = function (items, limit, operation, callback) {
             }
         }
 
-        while (activeWorkersCount < limit && itemsIterator.hasAny()) {
-            var nextItem = itemsIterator.next();
-            operation(nextItem.value, internalCallback.bind(null, nextItem.index));
+        while (activeWorkersCount < limit && currentIndex < items.length) {
+            operation(items[currentIndex], internalCallback.bind(null, currentIndex++));
             activeWorkersCount++;
         }
 
-        if (!itemsIterator.hasAny() && !activeWorkersCount || !limit) {
+        if (currentIndex === items.length && !activeWorkersCount || !limit) {
             callback(null, result);
         }
     }());
@@ -128,7 +114,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 exports.filterLimit = function (items, limit, operation, callback) {
     exports.mapLimit(items, limit, operation,
         function (error, data) {
-            callback(error, error ? undefined : items.filter(function (item, index) {
+            callback(error, error ? null : items.filter(function (item, index) {
                 return data[index];
             }));
         });
