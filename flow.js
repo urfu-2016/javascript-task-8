@@ -46,13 +46,14 @@ exports.map = function (items, operation, callback) {
     var countStart = items.length;
     var countEnd = 0;
     var result = [countStart];
+    var error = null;
     var cb = function (index, err, data) {
-        if (countErrors) {
-            return;
-        }
-        if (err) {
+        if (err || countErrors) {
             countErrors++;
-            callback(err);
+            error = error ? error : err;
+            callback(error);
+
+            return;
         }
         countEnd++;
         result[index] = data;
@@ -92,7 +93,6 @@ exports.filter = function (items, operation, callback) {
  */
 
 exports.makeAsync = function (func) {
-    // console.info(func);
     return function () {
         var args = [].slice.call(arguments);
         var cb = args.pop();
