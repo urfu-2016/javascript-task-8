@@ -80,8 +80,8 @@ function baseMap(items, operation, callback, additionalParameters) {
     var limit = additionalParameters.limit ? additionalParameters.limit : Infinity;
     var result = {
         values: [],
-        passedItemsCount: 0,
         errorOccurred: false,
+        passedItemsCount: 0,
         calledFunctionsCount: 0,
         currentIndex: 0
     };
