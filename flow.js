@@ -13,12 +13,10 @@ exports.isStar = true;
  */
 exports.serial = function (operations, callback) {
     function next(error, data) {
-        if (error) {
+        if (error || operations.length === 0) {
             callback(error, data);
-        } else if (operations.length > 0) {
-            operations.shift()(data, next);
         } else {
-            callback(null, data);
+            operations.shift()(data, next);
         }
     }
 
