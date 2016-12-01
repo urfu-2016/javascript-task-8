@@ -43,8 +43,8 @@ exports.map = function (items, operation, callback) {
         return;
     }
     var isError = false;
-    var countItem = items.length;
-    var result = [countItem];
+    var countUfinishedFunction = items.length;
+    var result = [countUfinishedFunction];
     var cb = function (index, err, data) {
         if (isError) {
             return;
@@ -53,9 +53,9 @@ exports.map = function (items, operation, callback) {
             isError = true;
             callback(err);
         }
-        countItem--;
+        countUfinishedFunction--;
         result[index] = data;
-        if (countItem === 0) {
+        if (countUfinishedFunction === 0) {
             callback(null, result);
 
         }
@@ -93,13 +93,13 @@ exports.makeAsync = function (func) {
     return function () {
         var args = [].slice.call(arguments);
         var cb = args.pop();
-        setTimeout(function () {
+        setImmediate(function () {
             try {
                 cb(null, func.apply(null, args));
             } catch (e) {
                 cb(e);
             }
-        }, 0);
+        });
     };
 };
 
