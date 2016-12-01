@@ -78,49 +78,53 @@ function filterResultedMap(resultValues, inputItems) {
 function baseMap(items, operation, callback, additionalParameters) {
     var resultedMap = additionalParameters.resultedMap;
     var limit = additionalParameters.limit ? additionalParameters.limit : Infinity;
-    var result = {
-        values: [],
-        errorOccurred: false,
-        passedItemsCount: 0,
-        calledFunctionsCount: 0,
-        currentIndex: 0
-    };
+    var currentState = getCurrentStatePattern();
 
     if (items.length === 0) {
         callback(null, items);
     } else {
-        for (var i = 0; i < items.length && result.calledFunctionsCount < limit; i++) {
-            result.calledFunctionsCount++;
-            operation(items[i], operationCallback.bind(null, i));
-            result.currentIndex++;
+        for (var i = 0; i < items.length && currentState.progressCount < limit; i++) {
+            callOperation(operation, items, operationCallback, currentState);
         }
     }
 
     function operationCallback(index, error, data) {
+        currentState.progressCount--;
+        currentState.passedItemsCount++;
         if (arguments.length === 2) {
             data = error;
             error = undefined;
         }
 
-        if (error && !result.errorOccurred) {
+        if (error && !currentState.errorOccurred) {
             callback(error, data);
-            result.errorOccurred = true;
+            currentState.errorOccurred = true;
         } else {
-            result.values[index] = data;
-            result.passedItemsCount++;
+            currentState.values[index] = data;
 
-            if (result.passedItemsCount === items.length) {
-                callback(null, resultedMap(result.values, items));
-            }
-
-            result.calledFunctionsCount--;
-            if (result.calledFunctionsCount <= limit && result.currentIndex < items.length) {
-                var j = result.currentIndex++;
-                operation(items[j], operationCallback.bind(null, j));
-                result.calledFunctionsCount++;
+            if (currentState.progressCount <= limit && currentState.currentIndex < items.length) {
+                callOperation(operation, items, operationCallback, currentState);
+            } else if (currentState.passedItemsCount === items.length) {
+                callback(null, resultedMap(currentState.values, items));
             }
         }
     }
+}
+
+function callOperation(operation, items, operationCallback, currentState) {
+    currentState.progressCount++;
+    var index = currentState.currentIndex++;
+    operation(items[index], operationCallback.bind(null, index));
+}
+
+function getCurrentStatePattern() {
+    return {
+        values: [],
+        errorOccurred: false,
+        passedItemsCount: 0,
+        progressCount: 0,
+        currentIndex: 0
+    };
 }
 
 /**
@@ -133,14 +137,14 @@ exports.makeAsync = function (func) {
         setTimeout(function (args) {
             var callback = args.pop();
             var error = null;
-            var result = null;
+            var currentState = null;
             try {
-                result = func.apply(null, args);
+                currentState = func.apply(null, args);
             } catch (err) {
                 error = err;
             }
 
-            callback(error, result);
+            callback(error, currentState);
         }, 0, [].slice.call(arguments));
     };
 };
