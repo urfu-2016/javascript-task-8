@@ -25,9 +25,7 @@ describe('flow', function () {
             }),
 
             function (files, next) {
-                // console.info(files);
                 flow.filter(files, function (file, next) {
-                    // console.info(file);
                     fs.stat(file, function (err, stat) {
                         if (err) {
                             return next(err);

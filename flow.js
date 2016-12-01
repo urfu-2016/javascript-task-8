@@ -13,20 +13,20 @@ exports.isStar = false;
  */
 exports.serial = function (operations, callback) {
     // console.info(operations, callback);
-    if (!operations || operations.length === 0) {
+    if (operations.length === 0) {
         callback(null, []);
-    } else {
-        var index = 0;
-        var cb = function (err, data) {
-            index++;
-            if (err || index === operations.length) {
-                callback(err, data);
-            } else {
-                operations[index](data, cb);
-            }
-        };
-        operations[index](cb);
+
+        return;
     }
+    var index = 0;
+    var cb = function (err, data) {
+        if (err || index === operations.length - 1) {
+            callback(err, data);
+        } else {
+            operations[++index](data, cb);
+        }
+    };
+    operations[index](cb);
 };
 
 /**
@@ -37,29 +37,26 @@ exports.serial = function (operations, callback) {
  */
 
 exports.map = function (items, operation, callback) {
-    // console.info(items, operation, callback);
-
-    if (items.length === 0) {
+    if (!items.length) {
         callback(null, []);
-    }
 
-    var countErrors = 0;
-    var countSrart = items.length;
+        return;
+    }
+    var countErrors = null;
+    var countStart = items.length;
     var countEnd = 0;
-    var result = [countSrart];
+    var result = [countStart];
     var cb = function (index, err, data) {
-        if (countErrors > 0) {
-            return;
-        }
-        if (err) {
+        if (err || countErrors) {
             countErrors++;
             callback(err);
-        } else {
-            countEnd++;
-            result[index] = data;
-            if (countSrart === countEnd) {
-                return callback(null, result);
-            }
+
+            return;
+        }
+        countEnd++;
+        result[index] = data;
+        if (countStart === countEnd) {
+            return callback(null, result);
         }
     };
 
@@ -75,15 +72,15 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    // console.info(items, operation, callback);
     exports.map(items, operation, function (err, data) {
         if (err) {
             callback(err);
-        } else {
-            callback(null, items.filter(function (item, index) {
-                return data[index];
-            }));
+
+            return;
         }
+        callback(null, items.filter(function (item, index) {
+            return data[index];
+        }));
     });
 };
 
