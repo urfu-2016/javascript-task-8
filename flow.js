@@ -119,7 +119,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             }
             if (error) {
                 errors[index] = true;
-                callback(error);
+                callback(error, data);
             }
             result[index] = data;
 
@@ -142,7 +142,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 exports.filterLimit = function (items, limit, operation, callback) {
     exports.mapLimit(items, limit, operation, function (error, data) {
         if (error) {
-            callback(error, null);
+            callback(error, data);
         } else {
             callback(null, filterResult(items, data));
         }
