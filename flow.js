@@ -13,9 +13,7 @@ exports.isStar = true;
  */
 exports.serial = function (operations, callback) {
     if (!operations || operations.length === 0) {
-        callback(null, null);
-
-        return;
+        throw new TypeError('Empty parameters');
     }
     var currentOperationIndex = 0;
     operations[0](interiorCallback);
@@ -78,7 +76,7 @@ exports.makeAsync = function (func) {
  */
 exports.mapLimit = function (items, limit, operation, callback) {
     var completedFunctionCount = 0;
-    var isError = false;
+    var hasError = false;
     var result = [];
     var startedOperationCount = 0;
     if (!items.length) {
@@ -86,17 +84,17 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
         return;
     }
-    function interiorCallback(opIndex, err, data) {
-        if (isError) {
+    function interiorCallback(operationIndex, err, data) {
+        if (hasError) {
             return;
         }
         if (err) {
-            isError = true;
+            hasError = true;
             callback(err);
 
             return;
         }
-        result[opIndex] = data;
+        result[operationIndex] = data;
         completedFunctionCount++;
         if (completedFunctionCount === items.length) {
             callback(null, result);
