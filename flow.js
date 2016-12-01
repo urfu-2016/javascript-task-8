@@ -13,10 +13,11 @@ exports.isStar = false;
  */
 exports.serial = function (operations, callback) {
     function next(error, data) {
-        if (arguments.length === 1) {
+        if (!data) {
             data = error;
             error = undefined;
         }
+
         if (error) {
             callback(error, data);
         } else if (operations.length > 0) {
@@ -29,7 +30,7 @@ exports.serial = function (operations, callback) {
     if (operations.length > 0) {
         operations.shift()(next);
     } else {
-        callback(null, null);
+        callback();
     }
 };
 
@@ -40,48 +41,43 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    if (items.length === 0) {
-        callback(null, items);
-
-        return;
-    }
-
-    var errorOccurred = false;
     var result = {
-        array: [],
-        passedItemsCount: 0
+        values: [],
+        passedItemsCount: 0,
+        errorOccurred: false
     };
 
-    function operationCallback(res, index, error, data) {
-        if (arguments.length === 3) {
+    if (items.length === 0) {
+        callback(null, items);
+    } else {
+        for (var i = 0; i < items.length; i++) {
+            operation(items[i], operationCallback.bind(null, i));
+        }
+    }
+
+    function operationCallback(index, error, data) {
+        if (!data) {
             data = error;
             error = undefined;
         }
 
-        if (error && !errorOccurred) {
+        if (error && !result.errorOccurred) {
             callback(error, data);
-            errorOccurred = true;
+            result.errorOccurred = true;
+        } else {
+            result.values[index] = data;
+            result.passedItemsCount++;
 
-            return;
-        }
+            if (result.passedItemsCount === items.length) {
+                var mappedArray = result.values
+                    .filter(function (element) {
+                        return element;
+                    });
 
-        res.array[index] = data;
-        res.passedItemsCount++;
-
-        if (res.passedItemsCount === items.length) {
-            res.array = res.array
-                .filter(function (element) {
-                    return element;
-                });
-
-            callback(null, res.array);
+                callback(null, mappedArray);
+            }
         }
     }
-
-    for (var i = 0; i < items.length; i++) {
-        operation(items[i], operationCallback.bind(null, result, i));
-    }
-
 };
 
 /**
@@ -91,21 +87,22 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    if (items.length === 0) {
-        callback(null, items);
-
-        return;
-    }
-
-    var errorOccurred = false;
     var result = {
-        array: [],
-        passedItemsCount: 0
+        values: [],
+        passedItemsCount: 0,
+        errorOccurred: false
     };
 
-    function operationCallback(res, item, index, error) {
-        var data = [].slice.call(arguments)[4];
-        if (arguments.length === 4) {
+    if (items.length === 0) {
+        callback(null, items);
+    } else {
+        for (var i = 0; i < items.length && !errorOccurred; i++) {
+            operation(items[i], operationCallback.bind(null, items[i], i));
+        }
+    }
+
+    function operationCallback(item, index, error, data) {
+        if (!data) {
             data = error;
             error = undefined;
         }
@@ -113,29 +110,19 @@ exports.filter = function (items, operation, callback) {
         if (error && !errorOccurred) {
             callback(error, data);
             errorOccurred = true;
-
-            return;
-        }
-
-        if (data) {
-            res.array[index] = item;
         } else {
-            res.array[index] = false;
+            result.values[index] = data ? item : data;
+            result.passedItemsCount++;
+
+            if (result.passedItemsCount === items.length) {
+                result.values = result.values
+                    .filter(function (element) {
+                        return element;
+                    });
+
+                callback(null, result.values);
+            }
         }
-        res.passedItemsCount++;
-
-        if (res.passedItemsCount === items.length) {
-            res.array = res.array
-                .filter(function (element) {
-                    return element;
-                });
-
-            callback(null, res.array);
-        }
-    }
-
-    for (var i = 0; i < items.length; i++) {
-        operation(items[i], operationCallback.bind(null, result, items[i], i));
     }
 };
 
@@ -146,9 +133,7 @@ exports.filter = function (items, operation, callback) {
  */
 exports.makeAsync = function (func) {
     return function () {
-
-        return setTimeout(function (args) {
-            args = [].slice.call(args);
+        setTimeout(function (args) {
             var callback = args.pop();
             var error = null;
             var result = null;
@@ -159,7 +144,7 @@ exports.makeAsync = function (func) {
             }
 
             callback(error, result);
-        }, 0, arguments);
+        }, 0, [].slice.call(arguments));
     };
 };
 
