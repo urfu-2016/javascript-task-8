@@ -30,7 +30,7 @@ exports.serial = function (operations, callback) {
     if (operations.length > 0) {
         operations.shift()(next);
     } else {
-        callback(null, null);
+        callback();
     }
 };
 
@@ -147,7 +147,8 @@ exports.filter = function (items, operation, callback) {
  */
 exports.makeAsync = function (func) {
     return function () {
-        return setTimeout(function (args) {
+        setTimeout(function (args) {
+            args = [].slice.call(args);
             var callback = args.pop();
             var error = null;
             var result = null;
@@ -158,7 +159,7 @@ exports.makeAsync = function (func) {
             }
 
             callback(error, result);
-        }, 0, [].slice.call(arguments));
+        }, 0, arguments);
     };
 };
 
