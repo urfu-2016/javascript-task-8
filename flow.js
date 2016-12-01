@@ -13,10 +13,10 @@ exports.isStar = true;
  */
 exports.serial = function (operations, callback) {
     if (!operations || !operations.length) {
-        callback(null, null);
+        throw new Error();
+        // callback(null, null);
 
-        return;
-        // throw new TypeError('Empty parameters');
+        // return;
     }
     var currentOperationIndex = 0;
     operations[0](interiorCallback);
