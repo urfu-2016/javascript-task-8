@@ -42,27 +42,24 @@ exports.map = function (items, operation, callback) {
 
         return;
     }
-    var countErrors = null;
-    var countStart = items.length;
-    var countEnd = 0;
-    var result = [countStart];
-    var error = null;
+    var isError = false;
+    var countItem = items.length;
+    var result = [countItem];
     var cb = function (index, err, data) {
-        if (err || countErrors) {
-            countErrors++;
-            error = error ? error : err;
-            callback(error);
-
+        if (isError) {
             return;
         }
-        countEnd++;
+        if (err) {
+            isError = true;
+            callback(err);
+        }
+        countItem--;
         result[index] = data;
-        if (countStart === countEnd) {
+        if (countItem === 0) {
             callback(null, result);
 
         }
     };
-
     items.forEach(function (item, index) {
         operation(item, cb.bind(null, index));
     });
