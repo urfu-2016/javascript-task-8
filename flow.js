@@ -22,9 +22,10 @@ exports.serial = function (operations, callback) {
     var cb = function (err, data) {
         if (err || index === operations.length - 1) {
             callback(err, data);
-        } else {
-            operations[++index](data, cb);
+
+            return;
         }
+        operations[++index](data, cb);
     };
     operations[index](cb);
 };
@@ -56,7 +57,8 @@ exports.map = function (items, operation, callback) {
         countEnd++;
         result[index] = data;
         if (countStart === countEnd) {
-            return callback(null, result);
+            callback(null, result);
+
         }
     };
 
@@ -88,8 +90,7 @@ exports.filter = function (items, operation, callback) {
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
  */
-
- // Делаем из JSON.parse асинхронную
+ 
 exports.makeAsync = function (func) {
     // console.info(func);
     return function () {
