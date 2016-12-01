@@ -30,7 +30,6 @@ describe('flow', function () {
                         if (err) {
                             return next(err);
                         }
-
                         // Первый аргумент соответствует ошибке
                         next(null, stat.size > 0);
                     });
