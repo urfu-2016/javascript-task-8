@@ -12,8 +12,7 @@ exports.isStar = false;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    // console.info(operations, callback);
-    if (operations.length === 0) {
+    if (!operations.length) {
         callback(null, []);
 
         return;
@@ -48,11 +47,12 @@ exports.map = function (items, operation, callback) {
     var countEnd = 0;
     var result = [countStart];
     var cb = function (index, err, data) {
-        if (err || countErrors) {
+        if (countErrors) {
+            return;
+        }
+        if (err) {
             countErrors++;
             callback(err);
-
-            return;
         }
         countEnd++;
         result[index] = data;
