@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = true;
+exports.isStar = false;
 
 /**
  * Последовательное выполнение операций
@@ -50,7 +50,32 @@ function fillArray(count, value) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    exports.mapLimit(items, Infinity, operation, callback);
+    if (!items.length) {
+        callback(null, []);
+    }
+
+    var isNotVisited = fillArray(items.length, true);
+    var errors = fillArray(items.length, false);
+    var result = [];
+
+    items.forEach(function (element, index) {
+        operation(element, function (error, data) {
+            isNotVisited[index] = false;
+            if (errors.indexOf(true) !== -1) {
+                return;
+            }
+            if (error) {
+                errors[index] = true;
+                callback(error);
+            }
+            result[index] = data;
+
+            if (isNotVisited.indexOf(true) !== -1) {
+                return;
+            }
+            callback(null, result);
+        });
+    });
 };
 
 /**
@@ -60,7 +85,14 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    exports.filterLimit(items, Infinity, operation, callback);
+    console.info(items, operation, callback);
+    exports.map(items, operation, function (error, data) {
+        if (error) {
+            callback(error, null);
+        } else {
+            callback(null, filterResult(items, data));
+        }
+    });
 };
 
 /**
@@ -102,33 +134,7 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    var subItems = items.slice();
-    if (!subItems.length) {
-        callback(null, []);
-    }
-
-    var isNotVisited = fillArray(subItems.length, true);
-    var errors = fillArray(subItems.length, false);
-    var result = [];
-
-    subItems.forEach(function (element, index) {
-        operation(element, function (error, data) {
-            isNotVisited[index] = false;
-            if (errors.indexOf(true) !== -1) {
-                return;
-            }
-            if (error) {
-                errors[index] = true;
-                callback(error, data);
-            }
-            result[index] = data;
-
-            if (isNotVisited.indexOf(true) !== -1) {
-                return;
-            }
-            callback(null, result);
-        });
-    });
+    callback(new Error('Функция mapLimit не реализована'));
 };
 
 /**
@@ -140,11 +146,5 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    exports.mapLimit(items, limit, operation, function (error, data) {
-        if (error) {
-            callback(error, data);
-        } else {
-            callback(null, filterResult(items, data));
-        }
-    });
+    callback(new Error('Функция filterLimit не реализована'));
 };
