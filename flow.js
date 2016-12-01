@@ -89,9 +89,9 @@ function baseMap(items, operation, callback, additionalParameters) {
     if (items.length === 0) {
         callback(null, items);
     } else {
-        for (var i = 0; i < items.length && !result.errorOccurred; i++) {
-            operation(items[i], operationCallback.bind(null, i));
+        for (var i = 0; i < items.length && result.calledFunctionsCount < limit; i++) {
             result.calledFunctionsCount++;
+            operation(items[i], operationCallback.bind(null, i));
             result.currentIndex++;
         }
     }
@@ -113,11 +113,11 @@ function baseMap(items, operation, callback, additionalParameters) {
                 callback(null, resultedMap(result.values, items));
             }
 
-            result.currentIndex--;
+            result.calledFunctionsCount--;
             if (result.calledFunctionsCount <= limit && result.currentIndex < items.length) {
-                var j = result.currentIndex;
+                var j = result.currentIndex++;
                 operation(items[j], operationCallback.bind(null, j));
-                result.currentIndex++;
+                result.calledFunctionsCount++;
             }
         }
     }
