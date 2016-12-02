@@ -43,11 +43,12 @@ exports.map = function (items, operation, callback) {
     var result = [];
     var countExited = 0;
     var errorFlag = false;
-    items.forEach(function (item, itemIndex) {
+    items.some(function (item, itemIndex) {
         operation(item, function (error, data) {
             if (error && !errorFlag) {
                 callback(error);
                 errorFlag = true;
+
             } else {
                 countExited++;
                 result[itemIndex] = data;
@@ -56,6 +57,8 @@ exports.map = function (items, operation, callback) {
                 }
             }
         });
+
+        return errorFlag;
     });
 };
 
@@ -89,16 +92,16 @@ exports.filter = function (items, operation, callback) {
 exports.makeAsync = function (func) {
     return function () {
         var allArgs = [].slice.call(arguments);
-        var args = allArgs.slice(0, -1);
+        var newFunctionArgs = allArgs.slice(0, -1);
         setTimeout(function () {
             var functionResult;
-            var cb = allArgs[allArgs.length - 1];
+            var callback = allArgs[allArgs.length - 1];
             try {
-                functionResult = func.apply(null, args);
+                functionResult = func.apply(null, newFunctionArgs);
             } catch (e) {
-                cb(e);
+                callback(e);
             }
-            cb(null, functionResult);
+            callback(null, functionResult);
         }, 0);
     };
 };
