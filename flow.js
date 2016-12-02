@@ -13,7 +13,7 @@ exports.isStar = false;
  */
 exports.serial = function (operations, callback) {
     if (!operations || !operations.length) {
-        callback();
+        callback(null);
 
         return;
     }
@@ -73,9 +73,9 @@ exports.filter = function (items, operation, callback) {
 
             return;
         }
-        data.forEach(function (boolValue, valueIndex) {
-            if (boolValue) {
-                result.push(items[valueIndex]);
+        data.forEach(function (isElementMatched, elementIndex) {
+            if (isElementMatched) {
+                result.push(items[elementIndex]);
             }
         });
         callback(null, result);
