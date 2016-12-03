@@ -84,7 +84,14 @@ exports.mapLimit = function (items, limit, operation, callback) {
     var hasError = false;
     var activeOperations = 0;
     var startedOperations = 0;
-    var cb = function (index) {
+    var launchOperations = function (cb) {
+        while (startedOperations < items.length && activeOperations < limit) {
+            operation(items[startedOperations], cb(startedOperations));
+            startedOperations++;
+            activeOperations++;
+        }
+    };
+    var localCallback = function (index) {
         return function (error, data) {
             if (error || hasError) {
                 if (!hasError) {
@@ -97,19 +104,12 @@ exports.mapLimit = function (items, limit, operation, callback) {
                 if (startedOperations === items.length && !activeOperations) {
                     callback(null, values);
                 } else {
-                    launchOperations();
+                    launchOperations(localCallback);
                 }
             }
         };
     };
-    var launchOperations = function () {
-        while (startedOperations < items.length && activeOperations < limit) {
-            operation(items[startedOperations], cb(startedOperations));
-            startedOperations++;
-            activeOperations++;
-        }
-    };
-    launchOperations();
+    launchOperations(localCallback);
 };
 
 /**
