@@ -12,7 +12,7 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    if (operations.length > 0) {
+    if (operations.length) {
         var operationIndex = 0;
         var myCallback = function (error, data) {
             if (error || operationIndex === operations.length) {
@@ -99,24 +99,27 @@ exports.mapLimit = function (items, limit, operation, callback) {
         } else {
             resultData[index] = data;
 
-            finishIndex++;
-
             var _operation = operationsBeyondLimit.shift();
             if (_operation) {
                 _operation(myCallback.bind(null, operationIndex));
                 operationIndex++;
             }
 
-            if (finishIndex === operationIndex) {
+            if (++finishIndex === operationIndex) {
                 callback(error, resultData);
             }
         }
     };
 
-    for (var i = 0; i < operations.length; i++) {
-        operations[i](myCallback.bind(null, operationIndex));
+    operations.forEach(function (_operation) {
+        _operation(myCallback.bind(null, operationIndex));
         operationIndex++;
-    }
+    });
+
+    // for (var i = 0; i < operations.length; i++) {
+        // operations[i](myCallback.bind(null, operationIndex));
+        // operationIndex++;
+    // }
 };
 
 /**
