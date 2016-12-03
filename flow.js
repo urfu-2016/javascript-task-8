@@ -15,14 +15,15 @@ exports.serial = function (operations, callback) {
     if (!operations || operations.length === 0) {
         callback(null, null);
     } else {
+        var index = 0;
         var cb = function (error, data) {
-            if (error || operations.length === 0) {
+            index++;
+            if (error || operations.length === index) {
                 return callback(error, data);
             }
-            var operation = operations.shift();
-            operation(data, cb);
+            operations[index](data, cb);
         };
-        operations.shift()(cb);
+        operations[index](cb);
     }
 };
 
@@ -83,7 +84,6 @@ exports.mapLimit = function (items, limit, operation, callback) {
     var hasError = false;
     var activeOperations = 0;
     var startedOperations = 0;
-    var finishedOperations = 0;
     var cb = function (index) {
         return function (error, data) {
             if (error || hasError) {
@@ -93,10 +93,11 @@ exports.mapLimit = function (items, limit, operation, callback) {
                 }
             } else {
                 values[index] = data;
-                finishedOperations++;
                 activeOperations--;
-                if (finishedOperations === items.length) {
+                if (startedOperations === items.length && !activeOperations) {
                     callback(null, values);
+                } else {
+                    launchOperations();
                 }
             }
         };
@@ -106,9 +107,6 @@ exports.mapLimit = function (items, limit, operation, callback) {
             operation(items[startedOperations], cb(startedOperations));
             startedOperations++;
             activeOperations++;
-        }
-        if (finishedOperations < items.length) {
-            setTimeout(launchOperations, 0);
         }
     };
     launchOperations();
