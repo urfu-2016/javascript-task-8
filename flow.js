@@ -78,7 +78,7 @@ function makeTaskExecutor(taskLimit, callback, tasks) {
     return {
         isDone: false,
         writeIndex: 0,
-        taskLeft: tasks.length,
+        tasksToTerminateCount: tasks.length,
         workersCount: 0,
         queue: tasks.slice(),
 
@@ -86,7 +86,7 @@ function makeTaskExecutor(taskLimit, callback, tasks) {
             if (!this.isDone) {
                 this.isDone = true;
                 this.workersCount = 0;
-                this.taskLeft = 0;
+                this.tasksToTerminateCount = 0;
                 callback(error, data);
             }
         },
@@ -108,7 +108,7 @@ function makeTaskExecutor(taskLimit, callback, tasks) {
             } else {
                 this.workersCount--;
                 result[taskId] = data;
-                if (--this.taskLeft === 0) {
+                if (--this.tasksToTerminateCount === 0) {
                     this.terminate(null, result.filter(function (element) {
                         return element !== null;
                     }));
