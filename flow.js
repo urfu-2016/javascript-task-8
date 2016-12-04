@@ -97,7 +97,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
     var results = new Array(items.length);
     var fillingResultCells = 0;
-    var nextFreeItemIndex = 0;
+    var calledWorkersCount = 0;
     var wasError = false;
 
     var mapCallback = function (currentWorkerIndex, error, result) {
@@ -119,18 +119,20 @@ exports.mapLimit = function (items, limit, operation, callback) {
             return;
         }
 
-        if (nextFreeItemIndex < items.length) {
-            callNewWorker(nextFreeItemIndex);
+        if (calledWorkersCount < items.length) {
+            callNewWorker(calledWorkersCount);
         }
     };
 
     function callNewWorker(nextIndex) {
-        nextFreeItemIndex++;
+        calledWorkersCount++;
         operation(items[nextIndex], mapCallback.bind(null, nextIndex));
     }
 
-    for (var i = 0; (!limit || i < limit) && i < items.length; i++) {
+    var i = 0;
+    while ((!limit || i < limit) && i < items.length) {
         callNewWorker(i);
+        i++;
     }
 };
 
