@@ -118,8 +118,12 @@ exports.mapLimit = function (items, limit, operation, callback) {
  */
 exports.filterLimit = function (items, limit, operation, callback) {
     exports.mapLimit(items, limit, operation, function (err, data) {
-        callback(err, data && items.filter(function (item, index) {
-            return data[index];
-        }));
+        if (err) {
+            callback(err);
+        } else {
+            callback(null, items.filter(function (item, index) {
+                return data[index];
+            }));
+        }
     });
 };
