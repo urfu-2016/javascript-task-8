@@ -48,7 +48,7 @@ exports.map = function (items, operation, callback) {
     function innerCallback(i, error, result) {
         handledItems++;
         if (detectedError) {
-            
+
             return;
         }
         if (error) {
