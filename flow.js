@@ -56,14 +56,13 @@ exports.filter = function (items, operation, callback) {
  */
 exports.makeAsync = function (func) {
     return function () {
-        setTimeout(function (args) {
-            var callback = args.pop();
-            try {
-                callback(null, func.apply(null, args));
-            } catch (error) {
-                callback(error);
-            }
-        }, 0, [].slice.call(arguments));
+        var args = [].slice.call(arguments);
+        var callback = args.pop();
+        try {
+            callback(null, func.apply(null, args));
+        } catch (error) {
+            callback(error);
+        }
     };
 };
 
@@ -99,13 +98,13 @@ exports.mapLimit = function (items, limit, operation, callback) {
         if (err && !hasErrorOccurred) {
             hasErrorOccurred = true;
             callback(err);
-
-            return;
         }
 
-        result[index] = data;
-        workersCount--;
-        tryAddWorkers();
+        if (!hasErrorOccurred) {
+            result[index] = data;
+            workersCount--;
+            tryAddWorkers();
+        }
     }
 };
 
