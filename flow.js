@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = true;
+exports.isStar = false;
 
 /**
  * Последовательное выполнение операций
@@ -51,73 +51,15 @@ function fillArray(count, value) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    exports.mapLimit(items, Infinity, operation, callback);
-};
-
-/**
- * Параллельная фильтрация элементов
- * @param {Array} items – элементы для фильтрация
- * @param {Function} operation – функция фильтрации элементов
- * @param {Function} callback
- */
-exports.filter = function (items, operation, callback) {
-    exports.filterLimit(items, Infinity, operation, callback);
-};
-
-/**
- * Берем элементы по таким индексам, где в data они true
- * @param {Array} items – элементы для фильтрация
- * @param {Array} data - элементы, индексы которых надо брать
- * @returns {Array}
- */
-function filterResult(items, data) {
-    return items.filter(function (item, index) {
-        return data[index];
-    });
-}
-
-function newAsync(func) {
-    var args = [].slice.call(arguments, 1);
-    var callback = args.pop();
-    var value = null;
-    var result;
-
-    try {
-        result = func.apply(null, args);
-    } catch (error) {
-        value = error;
-    }
-    callback(value, result);
-}
-
-/**
- * Асинхронизация функций
- * @param {Function} func – функция, которой суждено стать асинхронной
- * @returns {Function}
- */
-exports.makeAsync = function (func) {
-    return newAsync.bind(null, func);
-};
-
-/**
- * Параллельная обработка элементов с ограничением
- * @star
- * @param {Array} items – элементы для итерации
- * @param {Number} limit – максимальное количество выполняемых параллельно операций
- * @param {Function} operation – функция для обработки элементов
- * @param {Function} callback
- */
-exports.mapLimit = function (items, limit, operation, callback) {
-    var subItems = items.slice();
-    if (!subItems.length) {
+    if (!items.length) {
         callback(null, []);
     }
 
-    var isNotVisited = fillArray(subItems.length, true);
-    var errors = fillArray(subItems.length, false);
+    var isNotVisited = fillArray(items.length, true);
+    var errors = fillArray(items.length, false);
     var result = [];
 
-    subItems.forEach(function (element, index) {
+    items.forEach(function (element, index) {
         operation(element, function (error, data) {
             isNotVisited[index] = false;
             if (errors.indexOf(true) !== -1) {
@@ -137,7 +79,70 @@ exports.mapLimit = function (items, limit, operation, callback) {
             callback(null, result);
         });
     });
+};
 
+/**
+ * Параллельная фильтрация элементов
+ * @param {Array} items – элементы для фильтрация
+ * @param {Function} operation – функция фильтрации элементов
+ * @param {Function} callback
+ */
+exports.filter = function (items, operation, callback) {
+    console.info(items, operation, callback);
+    exports.map(items, operation, function (error, data) {
+        if (error) {
+            callback(error, null);
+        } else {
+            callback(null, filterResult(items, data));
+        }
+    });
+};
+
+/**
+ * Берем элементы по таким индексам, где в data они true
+ * @param {Array} items – элементы для фильтрация
+ * @param {Array} data - элементы, индексы которых надо брать
+ * @returns {Array}
+ */
+function filterResult(items, data) {
+    return items.filter(function (item, index) {
+        return data[index];
+    });
+}
+
+function callAsync(func) {
+    var args = [].slice.call(arguments, 1);
+    var callback = args.pop();
+    var value = null;
+    var result;
+
+    try {
+        result = func.apply(null, args);
+    } catch (error) {
+        value = error;
+    }
+    callback(value, result);
+}
+
+/**
+ * Асинхронизация функций
+ * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
+ */
+exports.makeAsync = function (func) {
+    return callAsync.bind(null, func);
+};
+
+/**
+ * Параллельная обработка элементов с ограничением
+ * @star
+ * @param {Array} items – элементы для итерации
+ * @param {Number} limit – максимальное количество выполняемых параллельно операций
+ * @param {Function} operation – функция для обработки элементов
+ * @param {Function} callback
+ */
+exports.mapLimit = function (items, limit, operation, callback) {
+    callback(new Error('Функция mapLimit не реализована'));
 };
 
 /**
@@ -149,11 +154,5 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    exports.mapLimit(items, limit, operation, function (error, data) {
-        if (error) {
-            callback(error, data);
-        } else {
-            callback(null, filterResult(items, data));
-        }
-    });
+    callback(new Error('Функция filterLimit не реализована'));
 };
