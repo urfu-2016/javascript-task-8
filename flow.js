@@ -18,16 +18,16 @@ exports.serial = function (operations, callback) {
 
         return;
     }
-    var i = 0;
+    var index = 0;
     function innerCallback(error, data) {
-        i++;
-        if (i === operations.length || error) {
+        index++;
+        if (index === operations.length || error) {
             callback(error, data);
         } else {
-            operations[i](data, innerCallback);
+            operations[index](data, innerCallback);
         }
     }
-    operations[i](innerCallback);
+    operations[index](innerCallback);
     console.info(operations, callback);
 };
 
@@ -38,20 +38,18 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    var results = [];
-    var notFinished = [];
-    var errors = [];
-    for (var k = 0; k < items.length; k++) {
-        notFinished[k] = true;
-        errors[k] = false;
-    }
-
     if (items.length === 0) {
         callback(null, []);
     }
+    var results = [];
+    var handledItems = 0;
+    var errors = [];
+    for (var k = 0; k < items.length; k++) {
+        errors[k] = false;
+    }
 
     function innerCallback(i, error, result) {
-        notFinished[i] = false;
+        handledItems++;
         for (var j = 0; j < errors.length; j++) {
             if (errors[j]) {
 
@@ -63,18 +61,14 @@ exports.map = function (items, operation, callback) {
             callback(error);
         }
         results[i] = result;
-        for (var l = 0; l < notFinished.length; l++) {
-            if (notFinished[l]) {
-
-                return;
-            }
+        if (handledItems !== items.length) {
+            return;
         }
         callback(null, results);
     }
-
-    for (var i = 0; i < items.length; i++) {
-        operation(items[i], innerCallback.bind(null, i));
-    }
+    items.forEach(function (item, index) {
+        operation(item, innerCallback.bind(null, index));
+    });
 };
 
 /**
