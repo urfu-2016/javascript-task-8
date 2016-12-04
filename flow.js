@@ -43,21 +43,16 @@ exports.map = function (items, operation, callback) {
     }
     var results = [];
     var handledItems = 0;
-    var errors = [];
-    for (var k = 0; k < items.length; k++) {
-        errors[k] = false;
-    }
+    var detectedError = false;
 
     function innerCallback(i, error, result) {
         handledItems++;
-        for (var j = 0; j < errors.length; j++) {
-            if (errors[j]) {
-
-                return;
-            }
+        if (detectedError) {
+            
+            return;
         }
         if (error) {
-            errors[i] = true;
+            detectedError = true;
             callback(error);
         }
         results[i] = result;
