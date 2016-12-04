@@ -21,9 +21,10 @@ exports.serial = function (operations, callback) {
     var nextOperation = function (error, data) {
         if (error || !operations.length) {
             callback(error, data);
-        } else {
-            operations.shift()(data, nextOperation);
+
+            return;
         }
+        operations.shift()(data, nextOperation);
     };
     operations.shift()(nextOperation);
 };
@@ -67,6 +68,8 @@ exports.map = function (items, operation, callback) {
             if (error) {
                 errors[index] = true;
                 callback(error);
+
+                return;
             }
             result[index] = data;
 
@@ -107,22 +110,27 @@ function filterResult(items, data) {
     });
 }
 
+function newAsync(func) {
+    var args = [].slice.call(arguments, 1);
+    var callback = args.pop();
+    var value = null;
+    var result;
+
+    try {
+        result = func.apply(null, args);
+    } catch (error) {
+        value = error;
+    }
+    callback(value, result);
+}
+
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
  * @returns {Function}
  */
 exports.makeAsync = function (func) {
-    return function () {
-        setTimeout(function (args) {
-            var callback = args.pop();
-            try {
-                callback(null, func.apply(null, args));
-            } catch (error) {
-                callback(error);
-            }
-        }, 0, [].slice.call(arguments));
-    };
+    return newAsync.bind(null, func);
 };
 
 /**
