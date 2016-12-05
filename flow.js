@@ -36,7 +36,7 @@ exports.serial = function (operations, callback) {
 exports.map = function (items, operation, callback) {
     baseMap(items, operation, callback, {
         resultedMap: mapResultedMap,
-        limit: [].slice.call(arguments)[3]
+        limit: arguments[3]
     });
 };
 
@@ -53,7 +53,7 @@ function mapResultedMap(resultValues) {
 exports.filter = function (items, operation, callback) {
     baseMap(items, operation, callback, {
         resultedMap: filterResultedMap,
-        limit: [].slice.call(arguments)[3]
+        limit: arguments[3]
     });
 };
 
