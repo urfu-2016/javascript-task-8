@@ -78,7 +78,17 @@ function executeAsync(func) {
  * @returns {Function}
  */
 exports.makeAsync = function (func) {
-    return executeAsync.bind(null, func);
+    return function () {
+        var args = [].slice.call(arguments);
+        var callback = args.pop();
+        setTimeout(function () {
+            try {
+                callback(null, func.apply(null, args));
+            } catch (error) {
+                callback(error);
+            }
+        }, 0);
+    }
 };
 
 /**
@@ -97,28 +107,27 @@ exports.mapLimit = function (items, limit, operation, callback) {
     }
 
     var results = [];
+    var errorInChain = false;
     var executionInfos = items.map(function (value, index) {
         return {
             'value': value,
             'index': index,
             'started': false,
             'finished': false,
-            'error': null
         };
     });
 
     function internalCallback(executionInfo, error, result) {
         executionInfo.finished = true;
 
-        if (executionInfos.some(function (info) {
-            return info.error;
-        })) {
+        if (errorInChain) {
             return;
         }
 
         if (error) {
-            executionInfo.error = error;
             callback(error);
+            errorInChain = true;
+            return;
         }
 
         results[executionInfo.index] = result;
