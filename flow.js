@@ -7,16 +7,6 @@
  */
 exports.isStar = true;
 
-function getFirstNotStarted(executionInfos) {
-    for (var i = 0; i < executionInfos.length; i++) {
-        if (!executionInfos[i].started) {
-            return executionInfos[i];
-        }
-    }
-
-    return null;
-}
-
 /**
  * Последовательное выполнение операций
  * @param {Function[]} operations – функции для выполнения
@@ -96,16 +86,17 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
     var results = [];
     var errorInChain = false;
+    var totalCount = items.length;
     var executionInfos = items.map(function (value, index) {
         return {
             'value': value,
-            'index': index,
-            'finished': false
+            'index': index
         };
     });
+    var finishedInfos = [];
 
     function internalCallback(executionInfo, error, result) {
-        executionInfo.finished = true;
+        finishedInfos.push(executionInfo);
 
         if (errorInChain) {
             return;
@@ -120,23 +111,21 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
         results[executionInfo.index] = result;
 
-        var nextExecutionInfo = getFirstNotStarted(executionInfos);
-        if (nextExecutionInfo) {
+        var nextExecutionInfo = executionInfos;
+        if (executionInfos.length > 0) {
+            nextExecutionInfo = executionInfos.shift();
             operation(nextExecutionInfo.value, internalCallback.bind(null, nextExecutionInfo));
-            nextExecutionInfo.started = true;
         }
 
-        if (executionInfos.every(function (info) {
-            return info.finished;
-        })) {
+        if (finishedInfos.length === totalCount) {
             callback(null, results);
         }
     }
 
-    executionInfos.slice(0, limit).forEach(function (executionInfo) {
+    for (var i = 0; i < Math.min(limit, totalCount); i++) {
+        var executionInfo = executionInfos.shift();
         operation(executionInfo.value, internalCallback.bind(null, executionInfo));
-        executionInfo.started = true;
-    });
+    }
 };
 
 /**
