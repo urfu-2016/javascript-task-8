@@ -12,29 +12,27 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    var operationIndex = 0;
+    var result = null;
 
-    function innerCallback(err, data) {
-        if (err) {
-            callback(err);
+    var innerOperation = function (operation, innerCallback) {
+        var cb = function (err, data) {
+            if (!err) {
+                result = data;
+            }
 
-            return;
-        }
+            innerCallback(err);
+        };
 
-        operationIndex++;
-
-        if (operationIndex < operations.length) {
-            operations[operationIndex](data, innerCallback);
+        if (result) {
+            operation(result, cb);
         } else {
-            callback(null, data);
+            operation(cb);
         }
-    }
+    };
 
-    if (operations && operations.length !== 0) {
-        operations[operationIndex](innerCallback);
-    } else {
-        callback(null, null);
-    }
+    exports.mapLimit(operations, 1, innerOperation, function (err) {
+        callback(err, result);
+    });
 };
 
 function Worker(tasks, callback) {
@@ -162,23 +160,13 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    if (items && items.length !== 0) {
-        var tasks = items.map(function (item) {
-            return operation.bind(null, item);
-        });
-
-        var worker = new Worker(tasks, function (err, data) {
-            if (err) {
-                callback(err);
-            } else {
-                callback(null, items.filter(function (item, index) {
-                    return data[index];
-                }));
-            }
-        });
-
-        worker.startWork(limit);
-    } else {
-        callback(null, []);
-    }
+    exports.mapLimit(items, limit, operation, function (err, data) {
+        if (err) {
+            callback(err);
+        } else {
+            callback(null, items.filter(function (item, index) {
+                return data[index];
+            }));
+        }
+    });
 };
