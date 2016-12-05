@@ -19,15 +19,17 @@ exports.serial = function (operations, callback) {
         return;
     }
 
+    operations.reverse();
+
     function serialCallback(error, result) {
         if (error || !operations.length) {
             callback(error, result);
 
             return;
         }
-        operations.shift()(result, serialCallback);
+        operations.pop()(result, serialCallback);
     }
-    operations.shift()(serialCallback);
+    operations.pop()(serialCallback);
 };
 
 /**
@@ -93,6 +95,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             'index': index
         };
     });
+    executionInfos.reverse();
     var finishedInfos = [];
 
     function internalCallback(executionInfo, error, result) {
@@ -112,7 +115,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
         results[executionInfo.index] = result;
 
         if (executionInfos.length > 0) {
-            var nextExecutionInfo = executionInfos.shift();
+            var nextExecutionInfo = executionInfos.pop();
             operation(nextExecutionInfo.value, internalCallback.bind(null, nextExecutionInfo));
         }
 
@@ -122,7 +125,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
     }
 
     for (var i = 0; i < Math.min(limit, totalCount); i++) {
-        var executionInfo = executionInfos.shift();
+        var executionInfo = executionInfos.pop();
         operation(executionInfo.value, internalCallback.bind(null, executionInfo));
     }
 };
