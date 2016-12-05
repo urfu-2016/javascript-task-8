@@ -43,12 +43,11 @@ exports.map = function (items, operation, callback) {
     var result = [];
     var countExited = 0;
     var errorFlag = false;
-    items.some(function (item, itemIndex) {
+    items.forEach(function (item, itemIndex) {
         operation(item, function (error, data) {
             if (error && !errorFlag) {
                 callback(error);
                 errorFlag = true;
-
             } else {
                 countExited++;
                 result[itemIndex] = data;
@@ -57,8 +56,6 @@ exports.map = function (items, operation, callback) {
                 }
             }
         });
-
-        return errorFlag;
     });
 };
 
@@ -69,17 +66,14 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    var result = [];
     exports.map(items, operation, function (error, data) {
         if (error) {
             callback(error);
 
             return;
         }
-        data.forEach(function (isElementMatched, elementIndex) {
-            if (isElementMatched) {
-                result.push(items[elementIndex]);
-            }
+        var result = items.filter(function (_, index) {
+            return data[index];
         });
         callback(null, result);
     });
