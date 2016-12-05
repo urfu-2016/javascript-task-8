@@ -80,12 +80,9 @@ exports.filter = function (items, operation, callback) {
 
             return;
         }
-        var filteredResults = [];
-        for (var i = 0; i < items.length; i++) {
-            if (results[i]) {
-                filteredResults.push(items[i]);
-            }
-        }
+        var filteredResults = items.filter(function (item, index) {
+            return results[index];
+        });
         callback(null, filteredResults);
     });
 
@@ -98,13 +95,14 @@ exports.filter = function (items, operation, callback) {
  */
 exports.makeAsync = function (func) {
     return function () {
-        var arguments2 = [].slice.call(arguments, 1);
+        var params = [].slice.call(arguments, 1);
+        var pointer = params.length - 1;
         setTimeout(function () {
             try {
-                arguments2[arguments2.length - 1](null,
-                    func.apply(null, arguments2.slice(0, arguments2.length - 1)));
+                params[pointer](null,
+                    func.apply(null, params.slice(0, pointer)));
             } catch (error) {
-                arguments2[arguments2.length - 1](error);
+                params[pointer](error);
             }
         }, 0);
     }.bind(null, func);
