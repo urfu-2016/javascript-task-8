@@ -111,9 +111,8 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
         results[executionInfo.index] = result;
 
-        var nextExecutionInfo = executionInfos;
         if (executionInfos.length > 0) {
-            nextExecutionInfo = executionInfos.shift();
+            var nextExecutionInfo = executionInfos.shift();
             operation(nextExecutionInfo.value, internalCallback.bind(null, nextExecutionInfo));
         }
 
