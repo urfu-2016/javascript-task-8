@@ -60,18 +60,6 @@ exports.filter = function (items, operation, callback) {
     exports.filterLimit(items, Infinity, operation, callback);
 };
 
-function executeAsync(func) {
-    var args = [].slice.call(arguments, 1);
-    var callback = args.pop();
-    setTimeout(function () {
-        try {
-            callback(null, func.apply(null, args));
-        } catch (error) {
-            callback(error);
-        }
-    }, 0);
-}
-
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
@@ -88,7 +76,7 @@ exports.makeAsync = function (func) {
                 callback(error);
             }
         }, 0);
-    }
+    };
 };
 
 /**
@@ -112,8 +100,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
         return {
             'value': value,
             'index': index,
-            'started': false,
-            'finished': false,
+            'finished': false
         };
     });
 
@@ -127,6 +114,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
         if (error) {
             callback(error);
             errorInChain = true;
+
             return;
         }
 
