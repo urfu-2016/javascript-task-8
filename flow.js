@@ -9,17 +9,16 @@ exports.isStar = false;
 
 function makeAsync(func) {
     return function () {
-        setTimeout(function (args) {
-            var error = null;
-            var res = null;
-            var callback = args.pop();
-            try {
-                res = func.apply(null, args);
-            } catch (err) {
-                error = err;
-            }
-            callback(error, res);
-        }, 0, [].slice.call(arguments));
+        var args = [].slice.call(arguments);
+        var error = null;
+        var res = null;
+        var callback = args.pop();
+        try {
+            res = func.apply(null, args);
+        } catch (err) {
+            error = err;
+        }
+        callback(error, res);
     };
 }
 
@@ -47,7 +46,7 @@ function serial(operations, callback) {
 }
 
 function myMap(items, operation, callback) {
-    if (items.length === 0) {
+    if (!items.length) {
         callback(null, []);
 
         return;
@@ -74,7 +73,7 @@ function myMap(items, operation, callback) {
 }
 
 function myFilter(items, operation, callback) {
-    if (items.length === 0) {
+    if (!items.length) {
         callback(null, []);
 
         return;
