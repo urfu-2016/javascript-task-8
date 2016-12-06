@@ -34,10 +34,7 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    baseMap(items, operation, callback, {
-        resultedMap: mapResultedMap,
-        limit: arguments[3]
-    });
+    baseMap(items, operation, callback, mapResultedMap, arguments[3]);
 };
 
 function mapResultedMap(resultValues) {
@@ -51,27 +48,25 @@ function mapResultedMap(resultValues) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    baseMap(items, operation, callback, {
-        resultedMap: filterResultedMap,
-        limit: arguments[3]
-    });
+    baseMap(items, operation, callback, filterResultedMap, arguments[3]);
 };
 
 function filterResultedMap(resultValues, inputItems) {
-    return resultValues
-        .reduce(function (filteredItems, value, index) {
-            if (value) {
-                filteredItems.push(inputItems[index]);
-            }
-
-            return filteredItems;
-        }, []);
+    return inputItems
+        .filter(function (item, index) {
+            return resultValues[index];
+        });
 }
 
-function baseMap(items, operation, callback, additionalParameters) {
-    var resultedMap = additionalParameters.resultedMap;
-    var limit = additionalParameters.limit ? additionalParameters.limit : Infinity;
-    var currentState = getCurrentStatePattern();
+function baseMap(items, operation, callback, resultedMap) {
+    var limit = arguments[4] ? arguments[4] : Infinity;
+    var currentState = {
+        values: [],
+        errorOccurred: false,
+        passedItemsCount: 0,
+        progressCount: 0,
+        currentIndex: 0
+    };
 
     if (items.length === 0) {
         callback(null, items);
@@ -104,16 +99,6 @@ function callOperation(operation, items, operationCallback, currentState) {
     currentState.progressCount++;
     var index = currentState.currentIndex++;
     operation(items[index], operationCallback.bind(null, index));
-}
-
-function getCurrentStatePattern() {
-    return {
-        values: [],
-        errorOccurred: false,
-        passedItemsCount: 0,
-        progressCount: 0,
-        currentIndex: 0
-    };
 }
 
 /**
