@@ -4,7 +4,91 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = true;
+exports.isStar = false;
+
+
+function makeAsync(func) {
+    return function () {
+        var args = [].slice.call(arguments);
+        var error = null;
+        var res = null;
+        var callback = args.pop();
+        try {
+            res = func.apply(null, args);
+        } catch (err) {
+            error = err;
+        }
+        callback(error, res);
+    };
+}
+
+function serial(operations, callback) {
+    var nextData;
+    var index = 0;
+    var nextFunc = function (err, data) {
+        if (err) {
+            callback(err);
+
+            return;
+        }
+        nextData = data;
+        index++;
+        nextOperation();
+    };
+    operations[index](nextFunc);
+    function nextOperation() {
+        if (index >= operations.length) {
+            callback(null, nextData);
+        } else {
+            operations[index](nextData, nextFunc);
+        }
+    }
+}
+
+function myMap(items, operation, callback) {
+    if (!items.length) {
+        callback(null, []);
+
+        return;
+    }
+    var resultArray = [];
+    var handleItemsCount = 0;
+    var returnedError = null;
+    items.forEach(function (item, index) {
+        operation(item, function (err, data) {
+            if (!returnedError) {
+                if (err) {
+                    returnedError = err;
+                    callback(err);
+                } else {
+                    resultArray[index] = data;
+                    handleItemsCount++;
+                }
+            }
+            if (handleItemsCount === items.length && !returnedError) {
+                callback(null, resultArray);
+            }
+        });
+    });
+}
+
+function myFilter(items, operation, callback) {
+    if (!items.length) {
+        callback(null, []);
+
+        return;
+    }
+    myMap(items, operation, function (err, data) {
+        if (err) {
+            callback(err);
+        } else {
+            var filtered = items.filter(function (item, index) {
+                return data[index];
+            });
+            callback(null, filtered);
+        }
+    });
+}
 
 /**
  * Последовательное выполнение операций
@@ -12,7 +96,13 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
+    console.info('serial');
     console.info(operations, callback);
+    if (operations && operations.length > 0) {
+        serial(operations, callback);
+    } else {
+        callback(null, null);
+    }
 };
 
 /**
@@ -22,7 +112,9 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
+    console.info('map');
     console.info(items, operation, callback);
+    myMap(items, operation, callback);
 };
 
 /**
@@ -32,15 +124,21 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
+    console.info('filtr');
     console.info(items, operation, callback);
+    myFilter(items, operation, callback);
 };
 
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {function} async func
  */
 exports.makeAsync = function (func) {
+    console.info('asynx');
     console.info(func);
+
+    return makeAsync(func);
 };
 
 /**
