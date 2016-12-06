@@ -72,6 +72,13 @@ exports.makeAsync = function (func) {
     };
 };
 
+/**
+ * Возвращает объект executor, который регулирует выполнение асинхронщины
+ * @param {Number} taskLimit - ограничение, для количества одновременно выполняемых функций
+ * @param {Function} callback - вызовем его после выполнения всей асинхронщины
+ * @param {Array<Function>} tasks - асинхронщина для выполнения
+ * @returns {Object} - executor
+ */
 function makeTaskExecutor(taskLimit, callback, tasks) {
     var result = [];
 
