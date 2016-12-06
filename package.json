@@ -1,4 +1,6 @@
 {
+  "name": "flow",
+  "version": "0.9.0",
   "private": true,
   "main": "flow.js",
   "scripts": {
