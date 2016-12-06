@@ -1,4 +1,5 @@
 {
+  "name": "flow",
   "private": true,
   "main": "flow.js",
   "scripts": {
