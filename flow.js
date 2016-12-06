@@ -14,77 +14,71 @@ exports.isStar = true;
 exports.serial = function (operations, callback) {
     var result = null;
 
-    var innerOperation = function (operation, innerCallback) {
-        var cb = function (err, data) {
+    function innerOperation(operation, innerCallback) {
+        function cb(err, data) {
             if (!err) {
                 result = data;
             }
 
             innerCallback(err);
-        };
-
-        if (result) {
-            operation(result, cb);
-        } else {
-            operation(cb);
         }
-    };
+
+        if (operation.length === 1) {
+            operation(cb);
+        } else {
+            operation(result, cb);
+        }
+    }
 
     exports.mapLimit(operations, 1, innerOperation, function (err) {
         callback(err, result);
     });
 };
 
-function Worker(tasks, callback) {
-    this.tasks = tasks;
-    this.callback = callback;
+function doWork(tasks, callback, limit) {
+    var results = [];
+    var countOfProcessedTasks = 0;
+    var countOfStartedProcessedTasks = 0;
+    var finished = false;
 
-    this.results = [];
-    this.countOfProcessedTasks = 0;
-    this.countOfStartedProcessedTasks = 0;
-    this.finished = false;
+    function parallelize(taskIndex) {
+        tasks[taskIndex](function (err, data) {
+            recursiveСallback(err, data, taskIndex);
+        });
+    }
+
+    function recursiveСallback(err, data, resultIndex) {
+        if (finished) {
+            return;
+        }
+
+        if (err) {
+            finished = true;
+            callback(err);
+
+            return;
+        }
+
+        if (countOfStartedProcessedTasks < tasks.length) {
+            parallelize(countOfStartedProcessedTasks);
+            countOfStartedProcessedTasks++;
+        }
+
+        results[resultIndex] = data;
+        countOfProcessedTasks++;
+
+        if (countOfProcessedTasks === tasks.length) {
+            finished = true;
+            callback(null, results);
+        }
+    }
+
+    for (var i = 0; i < Math.min(limit, tasks.length); i++) {
+        parallelize(i);
+    }
+
+    countOfStartedProcessedTasks = limit;
 }
-
-Worker.prototype.parallelize = function (taskIndex) {
-    var _this = this;
-    this.tasks[taskIndex](function (err, data) {
-        _this.recursiveСallback(err, data, taskIndex);
-    });
-};
-
-Worker.prototype.recursiveСallback = function (err, data, resultIndex) {
-    if (this.finished) {
-        return;
-    }
-
-    if (err) {
-        this.finished = true;
-        this.callback(err);
-
-        return;
-    }
-
-    if (this.countOfStartedProcessedTasks < this.tasks.length) {
-        this.parallelize(this.countOfStartedProcessedTasks);
-        this.countOfStartedProcessedTasks++;
-    }
-
-    this.results[resultIndex] = data;
-    this.countOfProcessedTasks++;
-
-    if (this.countOfProcessedTasks === this.tasks.length) {
-        this.finished = true;
-        this.callback(null, this.results);
-    }
-};
-
-Worker.prototype.startWork = function (limit) {
-    for (var i = 0; i < Math.min(limit, this.tasks.length); i++) {
-        this.parallelize(i);
-    }
-
-    this.countOfStartedProcessedTasks = limit;
-};
 
 /**
  * Параллельная обработка элементов
@@ -143,9 +137,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
             return operation.bind(null, item);
         });
 
-        var worker = new Worker(tasks, callback);
-
-        worker.startWork(limit);
+        doWork(tasks, callback, limit);
     } else {
         callback(null, []);
     }
