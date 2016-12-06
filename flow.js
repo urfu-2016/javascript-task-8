@@ -57,18 +57,16 @@ exports.filter = function (items, operation, callback) {
  */
 exports.makeAsync = function (func) {
     return function () {
-        setTimeout(function (args) {
-            var argsCopy = args.slice();
-            var callback = argsCopy.pop();
-            var data;
-            var error;
-            try {
-                data = func.apply(null, argsCopy);
-            } catch (err) {
-                error = err;
-            }
-            callback(error, data);
-        }, 0, Array.from(arguments));
+        var argsCopy = Array.from(arguments);
+        var callback = argsCopy.pop();
+        var data;
+        var error;
+        try {
+            data = func.apply(null, argsCopy);
+        } catch (err) {
+            error = err;
+        }
+        callback(error, data);
     };
 };
 
