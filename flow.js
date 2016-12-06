@@ -12,7 +12,19 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    console.info(operations, callback);
+    function next(error, data) {
+        if (error || operations.length === 0) {
+            callback(error, data);
+        } else {
+            operations.shift()(data, next);
+        }
+    }
+
+    if (operations.length > 0) {
+        operations.shift()(next);
+    } else {
+        callback();
+    }
 };
 
 /**
@@ -22,8 +34,12 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    baseMap(items, operation, callback, mapResultedMap, arguments[3]);
 };
+
+function mapResultedMap(resultValues) {
+    return resultValues;
+}
 
 /**
  * Параллельная фильтрация элементов
@@ -32,15 +48,79 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    baseMap(items, operation, callback, filterResultedMap, arguments[3]);
 };
+
+function filterResultedMap(resultValues, inputItems) {
+    return inputItems
+        .filter(function (item, index) {
+            return resultValues[index];
+        });
+}
+
+function baseMap(items, operation, callback, resultedMap) {
+    var limit = arguments[4] ? arguments[4] : Infinity;
+    var currentState = {
+        values: [],
+        errorOccurred: false,
+        passedItemsCount: 0,
+        progressCount: 0,
+        currentIndex: 0
+    };
+
+    if (items.length === 0) {
+        callback(null, items);
+    } else {
+        for (var i = 0; i < items.length && currentState.progressCount < limit; i++) {
+            callOperation(operation, items, operationCallback, currentState);
+        }
+    }
+
+    function operationCallback(index, error, data) {
+        currentState.progressCount--;
+        currentState.passedItemsCount++;
+
+        if (error && !currentState.errorOccurred) {
+            callback(error, data);
+            currentState.errorOccurred = true;
+        } else {
+            currentState.values[index] = data;
+
+            if (currentState.progressCount <= limit && currentState.currentIndex < items.length) {
+                callOperation(operation, items, operationCallback, currentState);
+            } else if (currentState.passedItemsCount === items.length) {
+                callback(null, resultedMap(currentState.values, items));
+            }
+        }
+    }
+}
+
+function callOperation(operation, items, operationCallback, currentState) {
+    currentState.progressCount++;
+    var index = currentState.currentIndex++;
+    operation(items[index], operationCallback.bind(null, index));
+}
 
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function} - ассинхронная версия функции
  */
 exports.makeAsync = function (func) {
-    console.info(func);
+    return function () {
+        setTimeout(function (args) {
+            var callback = args.pop();
+            var error = null;
+            var currentState = null;
+            try {
+                currentState = func.apply(null, args);
+            } catch (err) {
+                error = err;
+            }
+
+            callback(error, currentState);
+        }, 0, [].slice.call(arguments));
+    };
 };
 
 /**
@@ -52,7 +132,7 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция mapLimit не реализована'));
+    exports.map(items, operation, callback, limit);
 };
 
 /**
@@ -64,5 +144,5 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция filterLimit не реализована'));
+    exports.filter(items, operation, callback, limit);
 };
