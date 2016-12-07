@@ -12,6 +12,7 @@ var directory = './data/';
 
 // Делаем из JSON.parse асинхронную
 var jsonParseAsync = flow.makeAsync(JSON.parse);
+
 // Последовательно выполняем операции
 flow.serial([
     // Вначале читаем список файлов директории
