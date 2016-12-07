@@ -13,7 +13,6 @@ exports.isStar = false;
  */
 exports.serial = function (operations, callback) {
     operations = operations || [];
-    callback = callback || [];
     if (!operations.length) {
         callback(null);
     } else {
@@ -39,11 +38,11 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
+    items = items || [];
     var newArray = [];
     var featuredItems = 0;
     var itemsLength = items.length;
     var errorHappened = false;
-    items = items || [];
 
     function mapping(index) {
         operation(items[index], function (error, data) {
