@@ -77,12 +77,12 @@ exports.map = function (items, operation, callback) {
  */
 exports.filter = function (items, operation, callback) {
     exports.map(items, operation, function (error, appropriateIndexes) {
-        items = items.filter(function (item, index) {
-            return appropriateIndexes[index];
-        });
         if (error) {
             callback(error, null);
         } else {
+            items = items.filter(function (item, index) {
+                return appropriateIndexes[index];
+            });
             callback(null, items);
         }
     });
