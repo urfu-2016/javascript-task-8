@@ -41,19 +41,23 @@ exports.map = function (items, operation, callback) {
     var newArray = [];
     var featuredItems = 0;
     var itemsLength = items.length;
+    var errorHappened = false;
 
     function mapping(index) {
         operation(items[index], function (error, data) {
-            if (error) {
-                callback(error, null);
+            if (!errorHappened) {
+                if (error) {
+                    callback(error, null);
+                    errorHappened = true;
 
-                return;
-            }
-            newArray[index] = data;
-            featuredItems++;
-            if (featuredItems === itemsLength) {
-                console.info(newArray);
-                callback(null, newArray);
+                    return;
+                }
+                newArray[index] = data;
+                featuredItems++;
+                if (featuredItems === itemsLength) {
+                    console.info(newArray);
+                    callback(null, newArray);
+                }
             }
         });
     }
