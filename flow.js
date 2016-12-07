@@ -14,7 +14,7 @@ exports.isStar = false;
 exports.serial = function (operations, callback) {
     operations = operations || [];
     if (!operations.length) {
-        callback(null);
+        callback(null, []);
     } else {
         var currentOperation = operations.shift();
         var funcCallback = function (error, result) {
