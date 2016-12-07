@@ -30,21 +30,6 @@ exports.serial = function (operations, callback) {
 };
 
 /**
- * Заполняем массив указанной длины значением, которое передали
- * @param {Number} count – длина массива, который нужно вернуть
- * @param {Boolean} value - элемент, которым заполним весь массив
- * @returns {Array}
- */
-function fillArray(count, value) {
-    var result = [];
-    for (var index = 0; index < count; index++) {
-        result[index] = value;
-    }
-
-    return result;
-}
-
-/**
  * Параллельная обработка элементов
  * @param {Array} items – элементы для итерации
  * @param {Function} operation – функция для обработки элементов
@@ -53,27 +38,29 @@ function fillArray(count, value) {
 exports.map = function (items, operation, callback) {
     if (!items.length) {
         callback(null, []);
+
+        return;
     }
 
-    var isNotVisited = fillArray(items.length, true);
-    var errors = fillArray(items.length, false);
+    var countUsedItems = items.length;
+    var isError = false;
     var result = [];
 
     items.forEach(function (element, index) {
         operation(element, function (error, data) {
-            isNotVisited[index] = false;
-            if (errors.indexOf(true) !== -1) {
+            countUsedItems--;
+            if (isError) {
                 return;
             }
             if (error) {
-                errors[index] = true;
+                isError = true;
                 callback(error);
 
                 return;
             }
             result[index] = data;
 
-            if (isNotVisited.indexOf(true) !== -1) {
+            if (countUsedItems > 0) {
                 return;
             }
             callback(null, result);
