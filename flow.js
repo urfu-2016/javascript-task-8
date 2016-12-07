@@ -38,7 +38,6 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    items = items || [];
     var newArray = [];
     var featuredItems = 0;
     var itemsLength = items.length;
@@ -67,7 +66,7 @@ exports.map = function (items, operation, callback) {
             mapping(index);
         }
     } else {
-        callback(null, []);
+        callback(null, items);
     }
 };
 
