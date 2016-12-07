@@ -54,7 +54,6 @@ exports.map = function (items, operation, callback) {
                 newArray[index] = data;
                 featuredItems++;
                 if (featuredItems === itemsLength) {
-                    console.info(newArray);
                     callback(null, newArray);
                 }
             }
