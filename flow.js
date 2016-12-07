@@ -14,6 +14,9 @@ exports.isStar = false;
 exports.serial = function (operations, callback) {
     operations = operations || [];
     callback = callback || [];
+    if (!operations.length) {
+        throw new TypeError('Operations is empty');
+    }
     var currentOperation = operations.shift();
     var funcCallback = function (error, result) {
         if (error) {
