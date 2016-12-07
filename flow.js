@@ -67,7 +67,7 @@ exports.map = function (items, operation, callback) {
             mapping(index);
         }
     } else {
-        callback(null);
+        callback(null, []);
     }
 };
 
