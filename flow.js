@@ -43,6 +43,7 @@ exports.map = function (items, operation, callback) {
     var featuredItems = 0;
     var itemsLength = items.length;
     var errorHappened = false;
+    items = items || [];
 
     function mapping(index) {
         operation(items[index], function (error, data) {
@@ -62,9 +63,12 @@ exports.map = function (items, operation, callback) {
             }
         });
     }
-
-    for (var index = 0; index < items.length; index++) {
-        mapping(index);
+    if (items.length) {
+        for (var index = 0; index < items.length; index++) {
+            mapping(index);
+        }
+    } else {
+        callback(null);
     }
 };
 
