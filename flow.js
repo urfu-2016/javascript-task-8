@@ -12,6 +12,8 @@ exports.isStar = false;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
+    operations = operations || [];
+    callback = callback || [];
     var currentOperation = operations.shift();
     var funcCallback = function (error, result) {
         if (error) {
