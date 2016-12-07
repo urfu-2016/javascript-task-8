@@ -15,20 +15,21 @@ exports.serial = function (operations, callback) {
     operations = operations || [];
     callback = callback || [];
     if (!operations.length) {
-        throw new TypeError('Operations is empty');
+        callback(null);
+    } else {
+        var currentOperation = operations.shift();
+        var funcCallback = function (error, result) {
+            if (error) {
+                callback(error, null);
+            } else if (!operations.length) {
+                callback(null, result);
+            } else {
+                currentOperation = operations.shift();
+                currentOperation(result, funcCallback);
+            }
+        };
+        currentOperation(funcCallback);
     }
-    var currentOperation = operations.shift();
-    var funcCallback = function (error, result) {
-        if (error) {
-            callback(error, null);
-        } else if (!operations.length) {
-            callback(null, result);
-        } else {
-            currentOperation = operations.shift();
-            currentOperation(result, funcCallback);
-        }
-    };
-    currentOperation(funcCallback);
 };
 
 /**
