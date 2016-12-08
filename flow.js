@@ -19,7 +19,8 @@ exports.serial = function (operations, callback) {
         if (currentIndex === operations.length || error) {
             callback(error, data);
         } else {
-            operations[currentIndex++](data || internalCallback, internalCallback);
+            operations[currentIndex](currentIndex ? data : internalCallback,
+                currentIndex++ ? internalCallback : null);
         }
     }());
 };
