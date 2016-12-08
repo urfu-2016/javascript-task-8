@@ -12,7 +12,21 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    console.info(operations, callback);
+    if (!operations || !operations.length) {
+        callback(null, null);
+
+        return;
+    }
+    var currentOperationIndex = 0;
+    operations[0](interiorCallback);
+    function interiorCallback(error, data) {
+        if (error || currentOperationIndex === operations.length - 1) {
+            callback(error, data);
+
+            return;
+        }
+        operations[++currentOperationIndex](data, interiorCallback);
+    }
 };
 
 /**
@@ -22,7 +36,7 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    this.mapLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -32,15 +46,26 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    this.filterLimit(items, Infinity, operation, callback);
 };
 
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
  */
 exports.makeAsync = function (func) {
-    console.info(func);
+    return function () {
+        var args = [].slice.call(arguments);
+        var callback = args.pop();
+        setTimeout(function () {
+            try {
+                callback(null, func.apply(null, args));
+            } catch (err) {
+                callback(err);
+            }
+        }, 0);
+    };
 };
 
 /**
@@ -52,7 +77,43 @@ exports.makeAsync = function (func) {
  * @param {Function} callback
  */
 exports.mapLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция mapLimit не реализована'));
+    var completedFunctionCount = 0;
+    var hasError = false;
+    var result = [];
+    var nextIndexToOperate = 0;
+    if (!items.length) {
+        callback(null, []);
+
+        return;
+    }
+    function interiorCallback(operationIndex, err, data) {
+        if (hasError) {
+            return;
+        }
+        if (err) {
+            hasError = true;
+            callback(err);
+
+            return;
+        }
+        result[operationIndex] = data;
+        completedFunctionCount++;
+        if (completedFunctionCount === items.length) {
+            callback(null, result);
+
+            return;
+        }
+        if (nextIndexToOperate < items.length) {
+            operation(items[nextIndexToOperate],
+                interiorCallback.bind(null, nextIndexToOperate));
+            nextIndexToOperate++;
+        }
+    }
+    var operationLimit = Math.min(items.length, limit);
+    nextIndexToOperate = operationLimit;
+    for (var i = 0; i < operationLimit; i++) {
+        operation(items[i], interiorCallback.bind(null, i));
+    }
 };
 
 /**
@@ -64,5 +125,16 @@ exports.mapLimit = function (items, limit, operation, callback) {
  * @param {Function} callback
  */
 exports.filterLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция filterLimit не реализована'));
+    var filteredItems = [];
+    this.mapLimit(items, limit, operation, function (err, data) {
+        if (err) {
+            callback(err);
+
+            return;
+        }
+        filteredItems = items.filter(function (item, index) {
+            return data[index];
+        });
+        callback(null, filteredItems);
+    });
 };
