@@ -80,7 +80,7 @@ exports.mapLimit = function (items, limit, operation, callback) {
     var completedFunctionCount = 0;
     var hasError = false;
     var result = [];
-    var startedOperationCount = 0;
+    var nextIndexToOperate = 0;
     if (!items.length) {
         callback(null, []);
 
@@ -103,15 +103,16 @@ exports.mapLimit = function (items, limit, operation, callback) {
 
             return;
         }
-        if (startedOperationCount < items.length) {
-            operation(items[startedOperationCount],
-                interiorCallback.bind(null, startedOperationCount));
-            startedOperationCount++;
+        if (nextIndexToOperate < items.length) {
+            operation(items[nextIndexToOperate],
+                interiorCallback.bind(null, nextIndexToOperate));
+            nextIndexToOperate++;
         }
     }
-    for (var i = 0; i < Math.min(items.length, limit); i++) {
+    var operationLimit = Math.min(items.length, limit);
+    nextIndexToOperate = operationLimit;
+    for (var i = 0; i < operationLimit; i++) {
         operation(items[i], interiorCallback.bind(null, i));
-        startedOperationCount++;
     }
 };
 
