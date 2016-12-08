@@ -116,8 +116,10 @@ var makeAsync = function (func) {
     };
 };
 
-exports.isStar = isStar;
-exports.serial = serial;
-exports.map = map;
-exports.filter = filter;
-exports.makeAsync = makeAsync;
+module.exports = {
+    isStar: isStar,
+    serial: serial,
+    map: map,
+    filter: filter,
+    makeAsync: makeAsync
+};
