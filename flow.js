@@ -17,16 +17,21 @@ var serial = function (operations, callback) {
 
         return;
     }
+
     var currentOperation = operations.shift();
     var funcCallback = function (error, result) {
         if (error) {
             callback(error, null);
-        } else if (!operations.length) {
-            callback(null, result);
-        } else {
-            currentOperation = operations.shift();
-            currentOperation(result, funcCallback);
+
+            return;
         }
+        if (!operations.length) {
+            callback(null, result);
+
+            return;
+        }
+        currentOperation = operations.shift();
+        currentOperation(result, funcCallback);
     };
 
     currentOperation(funcCallback);
@@ -44,6 +49,7 @@ var map = function (items, operation, callback) {
 
         return;
     }
+
     var resultArray = [];
     var featuredItems = 0;
     var itemsLength = items.length;
