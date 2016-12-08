@@ -4,15 +4,37 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = true;
+var isStar = false;
 
 /**
  * Последовательное выполнение операций
  * @param {Function[]} operations – функции для выполнения
  * @param {Function} callback
  */
-exports.serial = function (operations, callback) {
-    console.info(operations, callback);
+var serial = function (operations, callback) {
+    if (!operations.length) {
+        callback(null, operations);
+
+        return;
+    }
+
+    var currentOperation = operations.shift();
+    var funcCallback = function (error, result) {
+        if (error) {
+            callback(error, null);
+
+            return;
+        }
+        if (!operations.length) {
+            callback(null, result);
+
+            return;
+        }
+        currentOperation = operations.shift();
+        currentOperation(result, funcCallback);
+    };
+
+    currentOperation(funcCallback);
 };
 
 /**
@@ -21,8 +43,40 @@ exports.serial = function (operations, callback) {
  * @param {Function} operation – функция для обработки элементов
  * @param {Function} callback
  */
-exports.map = function (items, operation, callback) {
-    console.info(items, operation, callback);
+var map = function (items, operation, callback) {
+    if (!items.length) {
+        callback(null, items);
+
+        return;
+    }
+
+    var resultArray = [];
+    var featuredItems = 0;
+    var itemsLength = items.length;
+    var errorHappened = false;
+    var runOperation = function (index) {
+        operation(items[index], function (error, data) {
+            if (errorHappened) {
+
+                return;
+            }
+            if (error) {
+                callback(error, null);
+                errorHappened = true;
+
+                return;
+            }
+            resultArray[index] = data;
+            featuredItems++;
+            if (featuredItems === itemsLength) {
+                callback(null, resultArray);
+            }
+        });
+    };
+
+    for (var index = 0; index < itemsLength; index++) {
+        runOperation(index);
+    }
 };
 
 /**
@@ -31,38 +85,41 @@ exports.map = function (items, operation, callback) {
  * @param {Function} operation – функция фильтрации элементов
  * @param {Function} callback
  */
-exports.filter = function (items, operation, callback) {
-    console.info(items, operation, callback);
+var filter = function (items, operation, callback) {
+    map(items, operation, function (error, appropriateIndexes) {
+        if (error) {
+            callback(error, null);
+
+            return;
+        }
+        items = items.filter(function (item, index) {
+            return appropriateIndexes[index];
+        });
+        callback(null, items);
+    });
 };
 
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
  */
-exports.makeAsync = function (func) {
-    console.info(func);
+var makeAsync = function (func) {
+    return function () {
+        var args = [].slice.call(arguments);
+        var callback = args.pop();
+        try {
+            callback(null, func.apply(null, args));
+        } catch (error) {
+            callback(error, null);
+        }
+    };
 };
 
-/**
- * Параллельная обработка элементов с ограничением
- * @star
- * @param {Array} items – элементы для итерации
- * @param {Number} limit – максимальное количество выполняемых параллельно операций
- * @param {Function} operation – функция для обработки элементов
- * @param {Function} callback
- */
-exports.mapLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция mapLimit не реализована'));
-};
-
-/**
- * Параллельная фильтрация элементов с ограничением
- * @star
- * @param {Array} items – элементы для итерации
- * @param {Number} limit – максимальное количество выполняемых параллельно операций
- * @param {Function} operation – функция для обработки элементов
- * @param {Function} callback
- */
-exports.filterLimit = function (items, limit, operation, callback) {
-    callback(new Error('Функция filterLimit не реализована'));
+module.exports = {
+    isStar: isStar,
+    serial: serial,
+    map: map,
+    filter: filter,
+    makeAsync: makeAsync
 };
