@@ -12,6 +12,12 @@ exports.isStar = false;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
+    if (!operations.length) {
+        callback(null, null);
+
+        return;
+    }
+
     operations.reverse();
 
     function executeNext(previousResult) {
