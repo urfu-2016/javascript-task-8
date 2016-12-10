@@ -44,6 +44,12 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
+    if (!items.length) {
+        callback(null, []);
+
+        return;
+    }
+
     var results = [];
     var mappedItems = 0;
     var hasErrors = false;
