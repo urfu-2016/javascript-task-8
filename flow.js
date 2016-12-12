@@ -12,6 +12,11 @@ exports.isStar = false;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
+    if (!operations.length) {
+        callback(null, null);
+
+        return;
+    }
     var index = 0;
 
     function localCallback(error, data) {
@@ -39,6 +44,11 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
+    if (!items.length) {
+        callback(null, []);
+
+        return;
+    }
     var result = [];
     var wasError = false;
     function localCallback(error, data) {
