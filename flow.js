@@ -88,6 +88,7 @@ exports.filter = function (items, operation, callback) {
         var result = items.filter(function (item, index) {
             return results[index];
         });
+
         callback(null, result);
     });
 };
