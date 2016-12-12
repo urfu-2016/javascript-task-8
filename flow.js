@@ -17,9 +17,10 @@ exports.serial = function (operations, callback) {
 
         return;
     }
+    var index = 0;
 
     function localCallback(error, data) {
-        if (!operations.length) {
+        if (index === operations.length - 1) {
             callback(null, data);
 
             return;
@@ -29,10 +30,11 @@ exports.serial = function (operations, callback) {
 
             return;
         }
-        operations.shift()(data, localCallback);
+        index++;
+        operations[index](data, localCallback);
     }
 
-    operations.shift()(localCallback);
+    operations[index](localCallback);
 };
 
 /**
@@ -65,8 +67,8 @@ exports.map = function (items, operation, callback) {
         }
     }
 
-    items.forEach(function (item) {
-        operation(item, localCallback);
+    items.forEach(function (item, index) {
+        operation(item, localCallback.bind(index));
     });
 };
 
