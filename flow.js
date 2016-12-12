@@ -18,10 +18,10 @@ exports.serial = function (operations, callback) {
         return;
     }
 
-    operations.reverse();
+    operations = operations.slice();
 
     function executeNext(previousResult) {
-        operations.pop()(previousResult, innerCallback);
+        operations.shift()(previousResult, innerCallback);
     }
 
     function innerCallback(error, previousResult) {
@@ -34,7 +34,7 @@ exports.serial = function (operations, callback) {
         }
     }
 
-    operations.pop()(innerCallback);
+    operations.shift()(innerCallback);
 };
 
 /**
@@ -106,13 +106,11 @@ exports.makeAsync = function (func) {
         var args = [].slice.call(arguments);
         var callback = args.pop();
 
-        setTimeout(function () {
-            try {
-                callback(null, func.apply(null, args));
-            } catch (err) {
-                callback(err, null);
-            }
-        }, 0);
+        try {
+            callback(null, func.apply(null, args));
+        } catch (err) {
+            callback(err, null);
+        }
     };
 
     return asyncFunc;
