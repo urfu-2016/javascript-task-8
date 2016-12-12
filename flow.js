@@ -17,10 +17,9 @@ exports.serial = function (operations, callback) {
 
         return;
     }
-    var index = 0;
 
     function localCallback(error, data) {
-        if (index === operations.length - 1) {
+        if (!operations.length) {
             callback(null, data);
 
             return;
@@ -30,11 +29,10 @@ exports.serial = function (operations, callback) {
 
             return;
         }
-        index++;
-        operations[index](data, localCallback);
+        operations.shift()(data, localCallback);
     }
 
-    operations[index](localCallback);
+    operations.shift()(localCallback);
 };
 
 /**
