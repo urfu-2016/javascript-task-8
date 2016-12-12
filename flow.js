@@ -51,7 +51,9 @@ exports.map = function (items, operation, callback) {
     }
     var result = [];
     var wasError = false;
-    function localCallback(error, data) {
+    var count = 0;
+    function localCallback(ind, error, data) {
+        count++;
         if (wasError) {
             return;
         }
@@ -61,14 +63,14 @@ exports.map = function (items, operation, callback) {
 
             return;
         }
-        result.push(data);
-        if (result.length === items.length) {
+        result[ind] = data;
+        if (count === items.length) {
             callback(null, result);
         }
     }
 
-    items.forEach(function (item) {
-        operation(item, localCallback);
+    items.forEach(function (item, index) {
+        operation(item, localCallback.bind(null, index));
     });
 };
 
