@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы mapLimit и filterLimit
  */
-exports.isStar = true;
+exports.isStar = false;
 
 /**
  * Последовательное выполнение операций
@@ -12,7 +12,24 @@ exports.isStar = true;
  * @param {Function} callback
  */
 exports.serial = function (operations, callback) {
-    console.info(operations, callback);
+    var index = 0;
+
+    function localCallback(error, data) {
+        if (index === operations.length - 1) {
+            callback(null, data);
+
+            return;
+        }
+        if (error) {
+            callback(error, null);
+
+            return;
+        }
+        index++;
+        operations[index](data, localCallback);
+    }
+
+    operations[index](localCallback);
 };
 
 /**
@@ -22,7 +39,27 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    var result = [];
+    var wasError = false;
+    function localCallback(error, data) {
+        if (wasError) {
+            return;
+        }
+        if (error) {
+            callback(error, null);
+            wasError = true;
+
+            return;
+        }
+        result.push(data);
+        if (result.length === items.length) {
+            callback(null, result);
+        }
+    }
+
+    items.forEach(function (item) {
+        operation(item, localCallback);
+    });
 };
 
 /**
@@ -32,15 +69,37 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    console.info(items, operation, callback);
+    exports.map(items, operation, function (error, results) {
+        if (error) {
+            callback(error, null);
+
+            return;
+        }
+        var result = items.filter(function (item, index) {
+            return results[index];
+        });
+        callback(null, result);
+    });
 };
 
 /**
  * Асинхронизация функций
  * @param {Function} func – функция, которой суждено стать асинхронной
+ * @returns {Function}
  */
 exports.makeAsync = function (func) {
-    console.info(func);
+    return function () {
+        var args = [].slice.call(arguments);
+        var callback = args.pop();
+
+        setTimeout(function () {
+            try {
+                callback(null, func.apply(null, args));
+            } catch (error) {
+                callback(error, null);
+            }
+        }, 0);
+    };
 };
 
 /**
