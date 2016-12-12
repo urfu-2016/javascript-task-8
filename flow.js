@@ -101,7 +101,6 @@ exports.makeAsync = function (func) {
     return function () {
         var args = [].slice.call(arguments);
         var callback = args.pop();
-
         try {
             callback(null, func.apply(null, args));
         } catch (error) {
