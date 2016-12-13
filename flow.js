@@ -83,9 +83,11 @@ function mapLimit(items, limit, operation, callback) {
     }
 
     var result = [];
+    var itemsCopy = items.slice();
+    var limitedItems = itemsCopy.splice(0, limit);
     var wasError = false;
     var finished = 0;
-    var next = 0;
+    var limitNum = limit;
 
     function localCallback(ind, error, data) {
         finished++;
@@ -105,18 +107,14 @@ function mapLimit(items, limit, operation, callback) {
             return;
         }
 
-        if (next < items.length) {
-            operation(items[next],
-                localCallback.bind(null, next));
-            next++;
+        if (itemsCopy.length !== 0) {
+            operation(itemsCopy.shift(), localCallback.bind(null, limitNum++));
         }
     }
-    var currentLimit = Math.min(items.length, limit);
-    next = currentLimit;
 
-    for (var i = 0; i < currentLimit; i++) {
-        operation(items[i], localCallback.bind(null, i));
-    }
+    limitedItems.forEach(function (item, index) {
+        operation(item, localCallback.bind(null, index));
+    });
 }
 
 /**
