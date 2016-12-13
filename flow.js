@@ -83,11 +83,8 @@ function mapLimit(items, limit, operation, callback) {
     }
 
     var result = [];
-    var itemsCopy = items.slice();
-    var limitedItems = itemsCopy.splice(0, limit);
     var wasError = false;
     var finished = 0;
-    var limitNum = limit;
 
     function localCallback(ind, error, data) {
         finished++;
@@ -103,16 +100,11 @@ function mapLimit(items, limit, operation, callback) {
         result[ind] = data;
         if (finished === items.length) {
             callback(null, result);
-
-            return;
         }
 
-        if (itemsCopy.length !== 0) {
-            operation(itemsCopy.shift(), localCallback.bind(null, limitNum++));
-        }
     }
 
-    limitedItems.forEach(function (item, index) {
+    items.forEach(function (item, index) {
         operation(item, localCallback.bind(null, index));
     });
 }
