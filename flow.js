@@ -41,7 +41,7 @@ exports.map = function (items, operation, callback) {
 
         return;
     }
-    var count = 0;
+    var itemIndex = 0;
     var results = [];
     var callbackError = false;
     function nextFunction(currentFunction, error, result) {
@@ -49,9 +49,9 @@ exports.map = function (items, operation, callback) {
             callback(error);
             callbackError = true;
         } else {
-            count++;
+            itemIndex++;
             results[currentFunction] = result;
-            if (count !== items.length) {
+            if (itemIndex !== items.length) {
                 return;
             }
             callback(null, results);
@@ -90,17 +90,15 @@ exports.filter = function (items, operation, callback) {
 exports.makeAsync = function (func) {
 
     return function () {
-        setTimeout(function (args) {
-            var callback = args.pop();
-            try {
-                callback(null, func.apply(null, args));
-            } catch (error) {
-                callback(error);
-            }
-        }, 0, [].slice.call(arguments));
+        var args = [].slice.call(arguments);
+        var callback = args.pop();
+        try {
+            callback(null, func.apply(null, args));
+        } catch (error) {
+            callback(error);
+        }
     };
 };
-
 
 /**
  * Параллельная обработка элементов с ограничением
