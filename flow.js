@@ -44,7 +44,7 @@ exports.serial = function (operations, callback) {
  * @param {Function} callback
  */
 exports.map = function (items, operation, callback) {
-    exports.mapLimit(items, Infinity, operation, callback);
+    mapLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -54,7 +54,7 @@ exports.map = function (items, operation, callback) {
  * @param {Function} callback
  */
 exports.filter = function (items, operation, callback) {
-    exports.filterLimit(items, Infinity, operation, callback);
+    filterLimit(items, Infinity, operation, callback);
 };
 
 /**
@@ -75,15 +75,7 @@ exports.makeAsync = function (func) {
     };
 };
 
-/**
- * Параллельная обработка элементов с ограничением
- * @star
- * @param {Array} items – элементы для итерации
- * @param {Number} limit – максимальное количество выполняемых параллельно операций
- * @param {Function} operation – функция для обработки элементов
- * @param {Function} callback
- */
-exports.mapLimit = function (items, limit, operation, callback) {
+function mapLimit(items, limit, operation, callback) {
     if (!items.length) {
         callback(null, []);
 
@@ -119,23 +111,28 @@ exports.mapLimit = function (items, limit, operation, callback) {
             next++;
         }
     }
-    next = Math.min(items.length, limit);
+    var currentLimit = Math.min(items.length, limit);
+    next = currentLimit;
 
-    items.forEach(function (item, i) {
-        operation(item, localCallback.bind(null, i));
-    });
-};
+    for (var i = 0; i < currentLimit; i++) {
+        operation(items[i], localCallback.bind(null, i));
+    }
+}
 
 /**
- * Параллельная фильтрация элементов с ограничением
+ * Параллельная обработка элементов с ограничением
  * @star
  * @param {Array} items – элементы для итерации
  * @param {Number} limit – максимальное количество выполняемых параллельно операций
  * @param {Function} operation – функция для обработки элементов
  * @param {Function} callback
  */
-exports.filterLimit = function (items, limit, operation, callback) {
-    exports.mapLimit(items, limit, operation, function (error, data) {
+exports.mapLimit = function (items, limit, operation, callback) {
+    mapLimit(items, limit, operation, callback);
+};
+
+function filterLimit(items, limit, operation, callback) {
+    mapLimit(items, limit, operation, function (error, data) {
         if (error) {
             callback(error, null);
 
@@ -146,4 +143,16 @@ exports.filterLimit = function (items, limit, operation, callback) {
         });
         callback(null, result);
     });
+}
+
+/**
+ * Параллельная фильтрация элементов с ограничением
+ * @star
+ * @param {Array} items – элементы для итерации
+ * @param {Number} limit – максимальное количество выполняемых параллельно операций
+ * @param {Function} operation – функция для обработки элементов
+ * @param {Function} callback
+ */
+exports.filterLimit = function (items, limit, operation, callback) {
+    filterLimit(items, limit, operation, callback);
 };
