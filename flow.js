@@ -119,12 +119,11 @@ exports.mapLimit = function (items, limit, operation, callback) {
             next++;
         }
     }
-    var currentLimit = Math.min(items.length, limit);
-    next = currentLimit;
+    next = Math.min(items.length, limit);
 
-    for (var i = 0; i < currentLimit; i++) {
-        operation(items[i], localCallback.bind(null, i));
-    }
+    items.forEach(function (item, i) {
+        operation(item, localCallback.bind(null, i));
+    });
 };
 
 /**
